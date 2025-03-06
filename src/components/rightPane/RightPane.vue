@@ -313,4 +313,27 @@ const formattedTimestamp = computed(() => {
   margin: 0;
   color: var(--base-black);
 }
+
+@media (max-width: 768px) {
+  .sdk-right-pane {
+    padding: 16px;
+  }
+
+  .sdk-right-pane .explainer-ui {
+    padding: 0px;
+  }
+
+  .sdk-right-pane-header-text h2 {
+    text-align: center;
+  }
+
+  .view-content {
+    padding: 0;
+  }
+
+  .sdk-action-button {
+    padding: 0px;
+    margin-right: 0px;
+  }
+}
 </style>
