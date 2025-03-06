@@ -108,7 +108,7 @@ async function fetchBanksList() {
   max-width: 1200px;
   height: 60%;
   max-height: 60vh;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .content-row {
@@ -116,6 +116,31 @@ async function fetchBanksList() {
   display: flex;
   justify-content: space-between;
   align-items: stretch;
+}
+
+.left-pane {
+  overflow-y: auto;
+  height: 100%;
+}
+
+/* Scrollbar styling */
+.left-pane::-webkit-scrollbar {
+  width: 6px;
+  background: transparent;
+}
+
+.left-pane::-webkit-scrollbar-track {
+  background: transparent;
+  margin: 24px 0;
+}
+
+.left-pane::-webkit-scrollbar-thumb {
+  background-color: var(--grey-200);
+  border-radius: 3px;
+}
+
+.left-pane::-webkit-scrollbar-thumb:hover {
+  background-color: var(--grey-300);
 }
 
 /* Desktop and large tablets */
