@@ -32,7 +32,7 @@ export default interface TransactionDetails {
   updatedAt: string;
   taxAmount: number;
   serviceAmount: number;
-  orderId: null;
+  orderId: string | null;
   signature: null;
   signatureHash: null;
   redirectUrl: null;

@@ -10,7 +10,7 @@
           <div class="bank-name-value">{{ selectedBank?.name }}</div>
         </div>
       </div>
-      <button class="change-button" @click="$emit('change')">Change</button>
+      <button class="change-button" @click="$emit('bankChange')">Change</button>
     </div>
 
     <div class="qr-section">
@@ -38,25 +38,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject } from 'vue';
+import { ref, onMounted, inject, onUnmounted } from 'vue';
 import type BankData from '@/core/types/BankData';
+import type PaymentDetails from '@/core/types/PaymentDetails';
+import { PaymentsService } from '@/core/services/PaymentsService';
+import type PaymentAuthResponse from '@/core/types/PaymentAuthResponse';
+import { EnvironmentTypeEnum } from '@/core/types/Environment';
 
-defineProps<{
+const props = defineProps<{
   selectedBank: BankData;
-  bankWebsiteUrl: string;
+  paymentDetails: PaymentDetails,
 }>();
 
-// Inject the values provided by PaymentDialog
-const qrCodeUrl = inject<string>('qrCodeUrl');
-console.log(qrCodeUrl);
+const bankWebsiteUrl = ref('');
+
 const emit = defineEmits<{
-  (e: 'change'): void;
-  (e: 'success'): void
+  (e: 'bankChange'): void;
+  (e: 'statusChange'): void
 }>();
 
+const qrCodeUrl = inject<string>('qrCodeUrl');
+const paymentRequestId = inject<string>('paymentRequestId');
+const environment = inject<EnvironmentTypeEnum>('environment');
 const qrLoadError = ref(false);
 const svgContent = ref<string | null>(null);
+const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
+const paymentsService = new PaymentsService();
+const pollInterval = ref<number | null>(null);
 
 const getBankLogo = (bank: BankData | undefined) => {
   if (!bank) return '';
@@ -83,14 +92,52 @@ const fetchSvgContent = async (url: string) => {
   }
 };
 
+const fetchAuthorisationUrl = async () => {
+  try {
+    isLoading.value = true;
+    const authResponseData = await paymentsService.callBankAuthorisationUrl(paymentRequestId, props.paymentDetails, props.selectedBank);
+    paymentAuthResponse.value = authResponseData;
+    bankWebsiteUrl.value = authResponseData?.authorisationUrl;
+  } catch (error) {
+    console.error('Failed to fetch authorisation URL:', error);
+  } finally {
+    isLoading.value = false;
+  }
+}
+
+const checkPaymentStatus = async () => {
+  try {
+    // TODO: Confirm this logic
+    const paymentStatusData = await paymentsService.getPaymentStatusByID(
+      paymentRequestId || "",
+      { env: environment || EnvironmentTypeEnum.SANDBOX }
+    );
+
+    console.log(paymentStatusData.status);
+
+    if (paymentStatusData.status !== 'AWAITING_AUTHORIZATION') {
+      clearInterval(pollInterval.value!);
+      emit('statusChange');
+    }
+  } catch (error) {
+    console.error('Failed to check payment status:', error);
+  }
+};
+
 onMounted(() => {
   if (qrCodeUrl) {
     fetchSvgContent(qrCodeUrl);
   }
 
-  setTimeout(() => {
-    emit('success');
-  }, 5000);
+  fetchAuthorisationUrl();
+
+  pollInterval.value = setInterval(checkPaymentStatus, 1000);
+});
+
+onUnmounted(() => {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value);
+  }
 });
 </script>
 

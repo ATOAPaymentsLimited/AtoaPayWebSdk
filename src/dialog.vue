@@ -1,7 +1,7 @@
 <template>
   <div class="sdk-dialog-container">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
-      <PaymentDialog :payment-request-id="paymentRequestId" :payment-url="paymentUrl" :qr-code-url="qrCodeUrl"
+      <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId" :qr-code-url="qrCodeUrl"
         @close="emit('close')" />
     </div>
   </div>
@@ -11,11 +11,12 @@
 import PaymentDialog from '@/components/PaymentDialog.vue';
 import { onErrorCaptured, onMounted } from 'vue';
 import { sdkTheme } from "@/assets/colors/colors";
+import type { EnvironmentTypeEnum } from '@/core/types/Environment';
 
 defineProps<{
   paymentRequestId: string,
   qrCodeUrl: string,
-  paymentUrl: string,
+  environment: EnvironmentTypeEnum,
 }>();
 
 onErrorCaptured((error, instance, info) => {
@@ -35,7 +36,6 @@ onErrorCaptured((error, instance, info) => {
   return false;
 });
 
-// Function to load Figtree font globally
 const loadFigtreeFont = () => {
   if (!document.querySelector('link[href*="Figtree"]')) {
     const link = document.createElement('link');
@@ -46,7 +46,6 @@ const loadFigtreeFont = () => {
   }
 };
 
-// Load the font immediately
 loadFigtreeFont();
 
 onMounted(() => {

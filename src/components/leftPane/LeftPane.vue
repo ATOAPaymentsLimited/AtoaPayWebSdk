@@ -12,24 +12,20 @@
 import LeftPaneHeader from "@/components/leftPane/LeftPaneHeader.vue";
 import LeftPaneFooter from "@/components/leftPane/LeftPaneFooter.vue";
 import type PaymentDetails from "@/core/types/PaymentDetails";
-import type { PropType } from "vue";
-import { computed, toRefs } from 'vue';
+import { computed, inject, toRefs, type Ref } from 'vue';
 
 const props = defineProps({
-  paymentDetails: {
-    type: Object as PropType<PaymentDetails>,
-    required: false,
-  },
   isLoading: {
     type: Boolean,
     required: false,
   },
 });
 
-const { paymentDetails, isLoading } = toRefs(props);
+const { isLoading } = toRefs(props);
+const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 
 const leftPaneStyle = computed(() => {
-  const themeColor = paymentDetails?.value?.merchantThemeDetails?.colorCode || 'var(--primary-900)';
+  const themeColor = paymentDetails?.value?.merchantThemeDetails?.colorCode ?? 'var(--primary-900)';
   return {
     backgroundColor: themeColor,
     transition: 'background-color 0.7s ease',

@@ -2,7 +2,6 @@ import { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
 import { defineCustomElement, type ComponentPublicInstance } from "vue";
 import AtoaPayClientSdk from "@/dialog.vue";
 
-// Convert the Vue component into a web component
 const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk, {
   configureApp(app) {
     app.config.errorHandler = (
@@ -29,19 +28,19 @@ const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk, {
 interface DialogOptions {
   paymentRequestId: string;
   qrCodeUrl: string;
-  paymentUrl: string;
 }
 
-// Register the web component
 customElements.define("atoa-pay-sdk-dialog", AtoaPaySdkDialogElement);
 
 export default class AtoaWebSdk {
   private eventListeners: Map<string, Function[]>;
   private dialogElement: HTMLElement | null;
+  private providedEnvironment: EnvironmentTypeEnum | undefined;
 
-  constructor() {
+  constructor(config?: { environment?: EnvironmentTypeEnum }) {
     this.eventListeners = new Map();
     this.dialogElement = null;
+    this._init(config);
   }
 
   /**
@@ -49,23 +48,13 @@ export default class AtoaWebSdk {
    * @param {Object} config - Configuration object
    * @returns {AtoaWebSdk} - The SDK instance for chaining
    */
-  init(config = {}) {
+  _init(config?: { environment?: EnvironmentTypeEnum }) {
     try {
-      this.validateConfig(config);
+      if (config !== undefined) {
+        this.validateConfig(config);
+      }
 
-      // Set default values
-      const defaultConfig = {
-        environment: "PRODUCTION",
-        ...config,
-      };
-
-      // stateManager.updateState({
-      //   initialized: true,
-      //   config: defaultConfig,
-      // });
-
-      // Emit init event
-      this._emit("init", { success: true, config: defaultConfig });
+      this.providedEnvironment = config?.environment;
 
       return this;
     } catch (error) {
@@ -110,14 +99,12 @@ export default class AtoaWebSdk {
     return new Promise((resolve) => {
       this.dialogElement = document.createElement("atoa-pay-sdk-dialog");
 
-      // Set dialog properties
       Object.assign(this.dialogElement, {
         paymentRequestId: options.paymentRequestId,
         qrCodeUrl: options.qrCodeUrl,
-        paymentUrl: options.paymentUrl,
+        environment: this.providedEnvironment,
       });
 
-      // Setup event listeners
       this.dialogElement.addEventListener("success", () => {
         this._removeDialog();
         resolve({
@@ -145,7 +132,11 @@ export default class AtoaWebSdk {
 
   _emit(
     event: string,
-    data: { success: boolean; config?: { environment: string }; error?: string }
+    data: {
+      success: boolean;
+      config?: { environment?: string };
+      error?: string;
+    }
   ) {
     const listeners = this.eventListeners.get(event);
 

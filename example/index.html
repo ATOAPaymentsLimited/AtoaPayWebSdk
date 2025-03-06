@@ -95,6 +95,32 @@
       font-size: 1rem;
       margin-bottom: 0;
     }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .input-group input,
+    .input-group select {
+      padding: 0.75rem 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      width: 100%;
+    }
+
+    .input-group input:focus,
+    .input-group select:focus {
+      outline: none;
+      border-color: #4F46E5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
   </style>
 </head>
 
@@ -103,6 +129,22 @@
     <div class="hero">
       <h1>Simple & Secure Payments</h1>
       <p>Experience seamless transactions with Atoa's innovative payment solution</p>
+      <div class="input-group">
+        <select id="environment">
+          <option value="SANDBOX">Sandbox</option>
+          <option value="PRODUCTION">Production</option>
+        </select>
+        <input 
+          type="text" 
+          id="payment-request-id" 
+          placeholder="Payment Request ID"
+        >
+        <input 
+          type="text" 
+          id="qr-code-url" 
+          placeholder="QR Code URL"
+        >
+      </div>
       <button id="atoa-pay-button">Pay using Atoa</button>
     </div>
 
@@ -126,18 +168,18 @@
     import AtoaWebSdk from '../dist/atoa-web-sdk.es.js';
 
     document.getElementById('atoa-pay-button').addEventListener('click', () => {
-      const sdk = new AtoaWebSdk();
-      sdk.init({ apiKey: 'abc123' });
+      const environment = document.getElementById('environment').value;
+      const paymentRequestId = document.getElementById('payment-request-id').value;
+      const qrCodeUrl = document.getElementById('qr-code-url').value;
+
+      const sdk = new AtoaWebSdk({
+        environment,
+      });
       sdk.showDialog({
-        paymentRequestId: '49749807-6f6e-4e73-b714-51088060e102',
-        qrCodeUrl: 'test-url',
-        paymentUrl: 'test-url',
+        paymentRequestId,
+        qrCodeUrl,
       }).then(result => {
-        if (result) {
-          console.log("User confirmed");
-        } else {
-          console.log("User cancelled");
-        }
+        console.log(`Atoa Web SDK result: ${JSON.stringify(result)}`);
       });
     });
   </script>

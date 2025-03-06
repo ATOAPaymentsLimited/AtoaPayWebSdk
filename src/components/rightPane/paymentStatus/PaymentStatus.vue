@@ -1,5 +1,5 @@
 <template>
-  <div class="payment-success">
+  <div class="payment-status">
     <div v-show="!showNextUI" class="success-content fade-out">
       <div class="success-animation">
         <img src="@/assets/images/payment_success.gif" alt="Payment Success" class="success-gif" />
@@ -8,42 +8,43 @@
     </div>
 
     <div v-show="showNextUI" class="next-content slide-up">
-      <PaymentDetails />
-      <div class="redirect-message">
-        You will be redirected in <strong>{{ countdown }}</strong> seconds
-      </div>
+      <PaymentDetails @close="emit('close')" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, type PropType } from 'vue';
 import PaymentDetails from '@/components/rightPane/paymentDetails/PaymentDetails.vue';
+import type TransactionDetails from '@/core/types/TransactionDetails';
 
 const emit = defineEmits(['close']);
-const showNextUI = ref(false);
-const countdown = ref(5);
-
-onMounted(() => {
-  setTimeout(() => {
-    showNextUI.value = true;
-    startCountdown();
-  }, 2000);
+const props = defineProps({
+  transactionDetails: {
+    type: Object as PropType<TransactionDetails>,
+    required: false,
+  }
 });
 
-const startCountdown = () => {
-  const timer = setInterval(() => {
-    countdown.value--;
-    if (countdown.value <= 0) {
-      clearInterval(timer);
-      emit('close');
-    }
-  }, 1000);
+const showNextUI = ref(false);
+
+onMounted(() => {
+  if (props.transactionDetails?.status !== "COMPLETED") {
+    triggerStatusUI();
+  } else {
+    setTimeout(() => {
+      triggerStatusUI();
+    }, 2000);
+  }
+});
+
+const triggerStatusUI = () => {
+  showNextUI.value = true;
 };
 </script>
 
 <style scoped>
-.payment-success {
+.payment-status {
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -98,14 +99,6 @@ const startCountdown = () => {
   gap: 8px;
   opacity: 0;
   /* Start hidden */
-}
-
-.redirect-message {
-  font-size: 14px;
-  height: 1.5;
-  color: var(--base-black);
-  margin-top: 8px;
-  width: 100%;
 }
 
 @keyframes fadeOutUp {

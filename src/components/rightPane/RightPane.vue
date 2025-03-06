@@ -48,9 +48,9 @@
             </div>
 
             <div v-else-if="currentView === 'View3'">
-              <PaymentOptions v-if="selectedBank" :selected-bank="selectedBank" :qr-code-url="qrCodeUrl"
-                :bank-website-url="bankWebsiteUrl" @change="setCurrentView('View2')"
-                @success="setCurrentView('View4')" />
+              <PaymentOptions v-if="selectedBank && paymentDetails" :selected-bank="selectedBank"
+                :qr-code-url="qrCodeUrl" :bank-website-url="bankWebsiteUrl" @bank-change="setCurrentView('View2')"
+                @status-change="setCurrentView('View4')" :payment-details="paymentDetails" />
             </div>
 
             <div v-else-if="currentView === 'View4'" class="view-container-flex">
@@ -59,7 +59,7 @@
             </div>
 
             <div v-else-if="currentView === 'View5'" class="view-container-flex">
-              <PaymentSuccess />
+              <PaymentStatus @close="emit('close')" />
             </div>
           </div>
         </Transition>
@@ -69,13 +69,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from 'vue'
+import { computed, inject, ref, toRefs, type Ref } from 'vue'
 import ExplainerUI from '@/components/rightPane/explainer/ExplainerUI.vue'
 import SelectBank from '@/components/rightPane/selectBank/SelectBank.vue'
 import type BankData from '@/core/types/BankData'
 import PaymentOptions from '@/components/rightPane/paymentOptions/PaymentOptions.vue'
 import PaymentVerification from '@/components/rightPane/paymentVerification/PaymentVerification.vue'
-import PaymentSuccess from '@/components/rightPane/paymentSuccess/PaymentSuccess.vue'
+import PaymentStatus from '@/components/rightPane/paymentStatus/PaymentStatus.vue'
+import type PaymentDetails from '@/core/types/PaymentDetails'
 
 const props = defineProps({
   isFetchingInitialData: {
@@ -84,11 +85,12 @@ const props = defineProps({
   },
 });
 
-defineEmits<{
+const emit = defineEmits<{
   close: [],
 }>();
 
 const { isFetchingInitialData } = toRefs(props);
+const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 
 const views = ['View1', 'View2', 'View3', 'View4', 'View5'] as const
 type ViewType = typeof views[number]
@@ -113,7 +115,6 @@ const setCurrentView = (view: ViewType) => {
 const enter = (el: Element, done: () => void) => {
   const animation = (el as HTMLElement).animate(
     [
-      // { opacity: 0, transform: 'translateX(50px)' },
       { opacity: 1, transform: 'translateX(0)' }
     ],
     {
@@ -140,10 +141,6 @@ const leave = (el: Element, done: () => void) => {
 
 const handleOnBankSelect = (bank: BankData) => {
   selectedBank.value = bank;
-
-  // TODO
-  qrCodeUrl.value = 'https://atoa-merchant-dev.s3.eu-west-2.amazonaws.com/display_payment-qr-codes/ead72a5d-8852-4ffd-a97e-05d28a28c013/1741160236932.svg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIASV2VH7U5MIC62E5K%2F20250305%2Feu-west-2%2Fs3%2Faws4_request&X-Amz-Date=20250305T073717Z&X-Amz-Expires=3600&X-Amz-Signature=d6c637d59391731f24b611d21b0fb997a6cc14f3122667bcc7c629d759566e7f&X-Amz-SignedHeaders=host';
-  bankWebsiteUrl.value = 'https://example.com/bank-website';
   setCurrentView('View3');
 };
 
@@ -151,12 +148,12 @@ const handleCancel = () => {
   setCurrentView('View2');
 };
 
-const timestamp = ref(new Date()); // You would set this with the actual payment timestamp
+// TODO: Update this value
+const timestamp = ref(new Date());
 
 const formattedTimestamp = computed(() => {
   const date = timestamp.value;
 
-  // Format time (03:45 PM)
   const timeOptions: Intl.DateTimeFormatOptions = {
     hour: '2-digit',
     minute: '2-digit',
@@ -164,7 +161,6 @@ const formattedTimestamp = computed(() => {
   };
   const time = date.toLocaleTimeString('en-US', timeOptions);
 
-  // Format date (5 Jun 2024)
   const dateOptions: Intl.DateTimeFormatOptions = {
     day: 'numeric',
     month: 'short',
@@ -291,12 +287,10 @@ const formattedTimestamp = computed(() => {
 }
 
 .fade-slide-enter-from {
-  /* opacity: 0; */
   transform: translateX(50px);
 }
 
 .fade-slide-leave-to {
-  /* opacity: 0; */
   transform: translateX(-50px);
 }
 

@@ -5,7 +5,8 @@
       <div>Payment details</div>
     </div>
 
-    <div class="debited-section">
+    <!-- TODO: Confirm this with New Consumer Web flow -->
+    <!-- <div class="debited-section">
       <div class="debited-from-text">Debited from</div>
       <div class="bank-details">
         <div class="bank-logo">
@@ -16,15 +17,15 @@
           <div class="account-number">XXXXXX047</div>
         </div>
       </div>
-    </div>
+    </div> -->
 
     <div class="reference-section">
       <div class="reference-row">
         <div class="value-container">
           <div class="label-text">Reference ID</div>
-          <div class="value-text">ATOA123131097763</div>
+          <div class="value-text">{{ transactionDetails?.paymentIdempotencyId }}</div>
         </div>
-        <button class="copy-button">
+        <button class="copy-button" @click="copyToClipboard(transactionDetails?.paymentIdempotencyId ?? '')">
           <img src="@/assets/images/icon_copy.svg" alt="Copy" />
         </button>
       </div>
@@ -32,9 +33,9 @@
       <div class="reference-row">
         <div class="value-container">
           <div class="label-text">Order ID</div>
-          <div class="value-text">abc12321334213</div>
+          <div class="value-text">{{ transactionDetails?.orderId }}</div>
         </div>
-        <button class="copy-button">
+        <button class="copy-button" @click="copyToClipboard(transactionDetails?.orderId ?? '')">
           <img src="@/assets/images/icon_copy.svg" alt="Copy" />
         </button>
       </div>
@@ -43,6 +44,25 @@
 </template>
 
 <script setup lang="ts">
+import type TransactionDetails from '@/core/types/TransactionDetails';
+import type { PropType } from 'vue';
+
+defineProps({
+  transactionDetails: {
+    type: Object as PropType<TransactionDetails>,
+    required: false,
+  },
+});
+
+const copyToClipboard = async (text?: string) => {
+  if (!text) return;
+
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch (err) {
+    console.error('Failed to copy text:', err);
+  }
+};
 </script>
 
 <style scoped>

@@ -2,7 +2,7 @@
   <div class="payment-dialog-container">
     <div class="payment-dialog" role="dialog" aria-modal="true">
       <div class="content-row">
-        <LeftPane :payment-details="paymentRequestDetails" :is-loading="isFetchingInitialData" />
+        <LeftPane :is-loading="isFetchingInitialData" />
         <RightPane :is-fetching-initial-data="isFetchingInitialData" @close="emit('close')" />
       </div>
     </div>
@@ -14,8 +14,9 @@ import LeftPane from '@/components/leftPane/LeftPane.vue';
 import RightPane from "@/components/rightPane/RightPane.vue";
 import { PaymentsService } from '@/core/services/PaymentsService';
 import type BankData from '@/core/types/BankData';
+import { EnvironmentTypeEnum } from '@/core/types/Environment';
 import type PaymentDetails from '@/core/types/PaymentDetails';
-import { onMounted, ref, provide } from 'vue';
+import { onMounted, ref, provide, type PropType } from 'vue';
 
 const isFetchingInitialData = ref(true);
 const paymentRequestDetails = ref<PaymentDetails>();
@@ -30,20 +31,21 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  paymentUrl: {
-    type: String,
+  environment: {
+    type: Object as PropType<EnvironmentTypeEnum>,
     required: true,
-  },
+  }
 });
 
 const emit = defineEmits<{
-  close: [] // event with no payload
+  close: []
 }>();
 
 provide('paymentRequestId', props.paymentRequestId);
 provide('qrCodeUrl', props.qrCodeUrl);
-provide('paymentUrl', props.paymentUrl);
 provide('banksList', banksList);
+provide('paymentRequestDetails', paymentRequestDetails);
+provide('environment', props.environment);
 
 onMounted(() => {
   fetchPaymentRequestDetails();

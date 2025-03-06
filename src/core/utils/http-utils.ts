@@ -2,9 +2,9 @@ export const baseURL = "https://devapi.atoa.me/api";
 
 export const api_urls = {
   GET_PAYMENT_DETAILS: `${baseURL}/payments/get-payment-details`,
-  SECURE_PAYMENT_AUTH: `${baseURL}/payments/v1/secure-payment-auth`,
-  GET_PAYMENT_STATUS: `${baseURL}/payments/payment-status/$id`,
   GET_BANK_INSTITUTIONS: `${baseURL}/institutions/customer`,
+  SECURE_PAYMENT_AUTH: `${baseURL}/payments/v1/secure-payment-auth`,
+  GET_PAYMENT_STATUS: `${baseURL}/payments/v1/payment-status/$id`,
 };
 
 export class Failure extends Error {
