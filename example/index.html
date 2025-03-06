@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atoa Payment Example</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+</head>
+
+<body>
+  <button id="atoa-pay-button">Pay using Atoa</button>
+
+  <script type="module">
+    import AtoaWebSdk from '../dist/atoa-web-sdk.es.js';
+
+    // Show a dialog
+    document.getElementById('atoa-pay-button').addEventListener('click', () => {
+      const sdk = new AtoaWebSdk();
+      sdk.init({ apiKey: 'abc123' });
+
+      // Example usage:
+      sdk.showDialog({
+        paymentRequestId: '49749807-6f6e-4e73-b714-51088060e102',
+        qrCodeUrl: 'test-url',
+        paymentUrl: 'test-url',
+      }).then(result => {
+        if (result) {
+          console.log("User confirmed");
+        } else {
+          console.log("User cancelled");
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

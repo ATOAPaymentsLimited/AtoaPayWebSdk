@@ -1,0 +1,24 @@
+{
+  "name": "atoa-pay-sdk",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "dev-host": "vite --host 0.0.0.0",
+    "build": "vue-tsc -b && vite build",
+    "preview": "vite preview",
+    "serve-example": "vite example",
+    "serve-http": "npx http-server . -o /example/index.html",
+    "watch": "vue-tsc -b && vite build --watch"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.8",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "@vue/tsconfig": "^0.7.0",
+    "rollup-plugin-visualizer": "^5.14.0",
+    "typescript": "~5.7.2",
+    "vite": "^6.2.0",
+    "vue-tsc": "^2.2.4"
+  }
+}
