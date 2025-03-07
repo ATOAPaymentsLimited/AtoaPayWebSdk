@@ -8,7 +8,23 @@
               <img src="@/assets/images/icon_back.svg" alt="Back" />
             </button>
           </div>
-          <div v-if="!isFetchingInitialData" :key="currentView" class="sdk-right-pane-header-text">
+          <div
+            class="spacer"
+            :style="{
+              width: isMobile
+                ? currentView === 'View2'
+                  ? '15vw'
+                  : currentView === 'View4'
+                  ? '20vw'
+                  : '25vw'
+                : '0px',
+            }"
+          ></div>
+          <div
+            v-if="!isFetchingInitialData"
+            :key="currentView"
+            class="sdk-right-pane-header-text"
+          >
             <div v-if="currentView === 'View1'">
               <h2>Continue to your bank</h2>
             </div>
@@ -69,13 +85,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, toRefs } from 'vue'
-import ExplainerUI from '@/components/rightPane/explainer/ExplainerUI.vue'
-import SelectBank from '@/components/rightPane/selectBank/SelectBank.vue'
-import type BankData from '@/core/types/BankData'
-import PaymentOptions from '@/components/rightPane/paymentOptions/PaymentOptions.vue'
-import PaymentVerification from '@/components/rightPane/paymentVerification/PaymentVerification.vue'
-import PaymentSuccess from '@/components/rightPane/paymentSuccess/PaymentSuccess.vue'
+import { computed, ref, toRefs, provide } from "vue";
+import ExplainerUI from "@/components/rightPane/explainer/ExplainerUI.vue";
+import SelectBank from "@/components/rightPane/selectBank/SelectBank.vue";
+import type BankData from "@/core/types/BankData";
+import PaymentOptions from "@/components/rightPane/paymentOptions/PaymentOptions.vue";
+import PaymentVerification from "@/components/rightPane/paymentVerification/PaymentVerification.vue";
+import PaymentSuccess from "@/components/rightPane/paymentSuccess/PaymentSuccess.vue";
 
 const props = defineProps({
   isFetchingInitialData: {
@@ -95,10 +111,12 @@ type ViewType = typeof views[number]
 
 const currentView = ref<ViewType>('View1')
 const selectedBank = ref<BankData | null>();
-const qrCodeUrl = ref<string>('');
-const bankWebsiteUrl = ref<string>('');
+const qrCodeUrl = ref<string>("");
+const bankWebsiteUrl = ref<string>("");
 
-const showBackButton = computed(() => currentView.value === 'View3' || currentView.value === 'View4');
+const showBackButton = computed(
+  () => currentView.value === "View3" || currentView.value === "View4"
+);
 
 const goToPreviousView = () => {
   const currentIndex = views.indexOf(currentView.value);
@@ -107,8 +125,13 @@ const goToPreviousView = () => {
 };
 
 const setCurrentView = (view: ViewType) => {
-  currentView.value = view
-}
+  currentView.value = view;
+};
+
+const width = ref(window.innerWidth);
+
+const isMobile = computed(() => width.value < 768);
+provide("isMobile", isMobile);
 
 const enter = (el: Element, done: () => void) => {
   const animation = (el as HTMLElement).animate(
@@ -323,7 +346,7 @@ const formattedTimestamp = computed(() => {
     padding: 0px;
   }
 
-  .sdk-right-pane-header-text h2 {
+  .sdk-right-pane-header-text p {
     text-align: center;
   }
 
@@ -335,5 +358,9 @@ const formattedTimestamp = computed(() => {
     padding: 0px;
     margin-right: 0px;
   }
+}
+
+.spacer-hidden {
+  display: none;
 }
 </style>

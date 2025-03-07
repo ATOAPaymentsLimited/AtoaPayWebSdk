@@ -28,7 +28,9 @@ import { onMounted, ref, provide } from 'vue';
 const isFetchingInitialData = ref(true);
 const paymentRequestDetails = ref<PaymentDetails>();
 const banksList = ref<BankData[]>([]);
-
+const paymentAmount = ref(0);
+const storeImageUrl = ref("");
+const merchantBusinessName = ref("");
 const props = defineProps({
   paymentRequestId: {
     type: String,
@@ -48,10 +50,13 @@ const emit = defineEmits<{
   close: [] // event with no payload
 }>();
 
-provide('paymentRequestId', props.paymentRequestId);
-provide('qrCodeUrl', props.qrCodeUrl);
-provide('paymentUrl', props.paymentUrl);
-provide('banksList', banksList);
+provide("paymentRequestId", props.paymentRequestId);
+provide("qrCodeUrl", props.qrCodeUrl);
+provide("paymentUrl", props.paymentUrl);
+provide("banksList", banksList);
+provide("paymentAmount", paymentAmount);
+provide("storeImageUrl", storeImageUrl);
+provide("merchantBusinessName", merchantBusinessName);
 
 onMounted(() => {
   fetchPaymentRequestDetails();
@@ -65,6 +70,10 @@ async function fetchPaymentRequestDetails() {
     const paymentsService = new PaymentsService();
     const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(props.paymentRequestId);
     paymentRequestDetails.value = paymentRequestResponseData;
+    paymentAmount.value = paymentRequestResponseData.amount.amount;
+    storeImageUrl.value = paymentRequestResponseData.storeImg || "";
+    merchantBusinessName.value =
+      paymentRequestResponseData.merchantBusinessName;
   } catch (error) {
     console.error('Failed to fetch payment details:', error);
   } finally {

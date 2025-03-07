@@ -8,6 +8,26 @@
     </div>
 
     <div v-show="showNextUI" class="next-content slide-up">
+      <div
+        v-if="isMobile"
+        class="image-container"
+        style="margin-top: 12px; margin-bottom: 12px"
+      >
+        <img
+          :src="storeImageUrl || '@/assets/images/store-image-placeholder.png'"
+          alt="Store Image"
+          class="store-image"
+          width="40px"
+          height="40px"
+          style="border-radius: 8px; margin-bottom: 12px"
+        />
+        <div class="merchant-business-name" style="margin-bottom: 12px">
+          To <b>{{ merchantBusinessName }}</b>
+        </div>
+        <span class="payment-amount-text"
+          >£ {{ paymentAmount?.toFixed(2) }}</span
+        >
+      </div>
       <PaymentDetails />
       <div class="redirect-message">
         You will be redirected in <strong>{{ countdown }}</strong> seconds
@@ -17,12 +37,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import PaymentDetails from '@/components/rightPane/paymentDetails/PaymentDetails.vue';
+import { ref, onMounted, inject } from "vue";
+import PaymentDetails from "@/components/rightPane/paymentDetails/PaymentDetails.vue";
 
 const emit = defineEmits(['close']);
 const showNextUI = ref(false);
 const countdown = ref(5);
+const paymentAmount: number | undefined = inject("paymentAmount");
+const storeImageUrl: string | undefined = inject("storeImageUrl");
+const merchantBusinessName: string | undefined = inject("merchantBusinessName");
+const isMobile: boolean = inject("isMobile") || false;
 
 onMounted(() => {
   setTimeout(() => {
@@ -80,7 +104,7 @@ const startCountdown = () => {
   font-size: 16px;
   font-weight: 700;
   height: 1.45;
-  color: var(--base-black)
+  color: var(--base-black);
 }
 
 .fade-out {
@@ -130,5 +154,11 @@ const startCountdown = () => {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+.payment-amount-text {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--base-black);
 }
 </style>
