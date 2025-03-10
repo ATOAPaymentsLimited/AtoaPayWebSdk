@@ -10,13 +10,13 @@
 </template>
 
 <script setup lang="ts">
+import { onMounted, ref, provide, type PropType } from 'vue';
 import LeftPane from '@/components/leftPane/LeftPane.vue';
 import RightPane from "@/components/rightPane/RightPane.vue";
-import { PaymentsService } from '@/core/services/PaymentsService';
-import type BankData from '@/core/types/BankData';
-import { EnvironmentTypeEnum } from '@/core/types/Environment';
 import type PaymentDetails from '@/core/types/PaymentDetails';
-import { onMounted, ref, provide, type PropType } from 'vue';
+import type BankData from '@/core/types/BankData';
+import { PaymentsService } from '@/core/services/PaymentsService';
+import { EnvironmentTypeEnum } from '@/core/types/Environment';
 
 const isFetchingInitialData = ref(true);
 const paymentRequestDetails = ref<PaymentDetails>();
@@ -24,10 +24,6 @@ const banksList = ref<BankData[]>([]);
 
 const props = defineProps({
   paymentRequestId: {
-    type: String,
-    required: true,
-  },
-  qrCodeUrl: {
     type: String,
     required: true,
   },
@@ -42,7 +38,6 @@ const emit = defineEmits<{
 }>();
 
 provide('paymentRequestId', props.paymentRequestId);
-provide('qrCodeUrl', props.qrCodeUrl);
 provide('banksList', banksList);
 provide('paymentRequestDetails', paymentRequestDetails);
 provide('environment', props.environment);

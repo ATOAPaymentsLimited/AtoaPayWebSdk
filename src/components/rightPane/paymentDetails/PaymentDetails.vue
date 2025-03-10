@@ -72,7 +72,6 @@ const pollPaymentStatus = async () => {
       { env: environment || EnvironmentTypeEnum.SANDBOX }
     );
 
-    console.log(JSON.stringify(result));
     transactionDetails.value = result;
 
     if (['COMPLETED', 'FAILED', 'EXPIRED'].includes(result.status)) {

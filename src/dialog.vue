@@ -1,8 +1,8 @@
 <template>
+  <script type="application/javascript" defer src="qrcode.vue.browser.min.js"></script>
   <div class="sdk-dialog-container">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
-      <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId" :qr-code-url="qrCodeUrl"
-        @close="emit('close')" />
+      <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId" @close="emit('close')" />
     </div>
   </div>
 </template>
@@ -15,7 +15,6 @@ import type { EnvironmentTypeEnum } from '@/core/types/Environment';
 
 defineProps<{
   paymentRequestId: string,
-  qrCodeUrl: string,
   environment: EnvironmentTypeEnum,
 }>();
 

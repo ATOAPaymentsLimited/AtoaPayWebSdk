@@ -139,11 +139,6 @@
           id="payment-request-id" 
           placeholder="Payment Request ID"
         >
-        <input 
-          type="text" 
-          id="qr-code-url" 
-          placeholder="QR Code URL"
-        >
       </div>
       <button id="atoa-pay-button">Pay using Atoa</button>
     </div>
@@ -170,14 +165,12 @@
     document.getElementById('atoa-pay-button').addEventListener('click', () => {
       const environment = document.getElementById('environment').value;
       const paymentRequestId = document.getElementById('payment-request-id').value;
-      const qrCodeUrl = document.getElementById('qr-code-url').value;
 
       const sdk = new AtoaWebSdk({
         environment,
       });
       sdk.showDialog({
         paymentRequestId,
-        qrCodeUrl,
       }).then(result => {
         console.log(`Atoa Web SDK result: ${JSON.stringify(result)}`);
       });

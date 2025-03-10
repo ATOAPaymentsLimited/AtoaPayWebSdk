@@ -20,10 +20,16 @@
         <div v-if="isLoading" class="qr-code-placeholder">
           <div class="loading-spinner"></div>
         </div>
-        <div v-if="qrLoadError" class="qr-error">
+        <div v-else-if="qrLoadError" class="qr-error">
           QR code failed to load. Please try refreshing the page.
         </div>
-        <div v-if="svgContent" v-html="svgContent" class="qr-code"></div>
+        <div v-else class="qrcode">
+          <vue-qrcode :value="bankWebsiteUrl" tag="svg" :options="{
+            errorCorrectionLevel: 'Q',
+            width: 250,
+          }"></vue-qrcode>
+          <img class="qrcode__image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
+        </div>
       </div>
     </div>
 
@@ -38,12 +44,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject, onUnmounted } from 'vue';
+import { ref, onMounted, inject, onUnmounted, type Ref } from 'vue';
 import type BankData from '@/core/types/BankData';
 import type PaymentDetails from '@/core/types/PaymentDetails';
 import { PaymentsService } from '@/core/services/PaymentsService';
 import type PaymentAuthResponse from '@/core/types/PaymentAuthResponse';
 import { EnvironmentTypeEnum } from '@/core/types/Environment';
+import VueQrcode from '@chenfengyuan/vue-qrcode';
 
 const props = defineProps<{
   selectedBank: BankData;
@@ -57,11 +64,10 @@ const emit = defineEmits<{
   (e: 'statusChange'): void
 }>();
 
-const qrCodeUrl = inject<string>('qrCodeUrl');
 const paymentRequestId = inject<string>('paymentRequestId');
+inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
 const qrLoadError = ref(false);
-const svgContent = ref<string | null>(null);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
 const paymentsService = new PaymentsService();
@@ -73,26 +79,7 @@ const getBankLogo = (bank: BankData | undefined) => {
   return logoMedia ? logoMedia.source : '';
 };
 
-const fetchSvgContent = async (url: string) => {
-  try {
-    isLoading.value = true;
-    qrLoadError.value = false;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('Failed to fetch SVG');
-    const text = await response.text();
-    // Basic validation that we received SVG content
-    if (!text.includes('<svg')) throw new Error('Invalid SVG content');
-    svgContent.value = text;
-  } catch (error) {
-    console.error('Failed to load QR code:', error);
-    qrLoadError.value = true;
-    svgContent.value = null;
-  } finally {
-    isLoading.value = false;
-  }
-};
-
-const fetchAuthorisationUrl = async () => {
+const fetchAuthorisationData = async () => {
   try {
     isLoading.value = true;
     const authResponseData = await paymentsService.callBankAuthorisationUrl(paymentRequestId, props.paymentDetails, props.selectedBank);
@@ -125,12 +112,7 @@ const checkPaymentStatus = async () => {
 };
 
 onMounted(() => {
-  if (qrCodeUrl) {
-    fetchSvgContent(qrCodeUrl);
-  }
-
-  fetchAuthorisationUrl();
-
+  fetchAuthorisationData();
   pollInterval.value = setInterval(checkPaymentStatus, 1000);
 });
 
@@ -242,20 +224,30 @@ onUnmounted(() => {
 }
 
 .qr-container {
-  background: white;
-  padding: 16px;
+  background: var(--base-white);
   margin: 24px 0;
   border-radius: 12.8px;
   border: 0.8px solid var(--Neutral-Grey-200, #EAEEF0);
   background: var(--Neutral-Grey-50, #F6F8F9);
 }
 
-.qr-code {
-  width: 200px;
-  height: 200px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.qrcode {
+  padding: 12px;
+  display: inline-block;
+  font-size: 0;
+  margin-bottom: 0;
+  position: relative;
+}
+
+.qrcode__image {
+  background-color: var(--base-white);
+  border-radius: 6px;
+  overflow: hidden;
+  position: absolute;
+  padding: 14px 6px;
+  top: 43%;
+  left: 43%;
+  margin: auto;
 }
 
 .qr-code :deep(svg) {
@@ -264,8 +256,8 @@ onUnmounted(() => {
 }
 
 .qr-code-placeholder {
-  width: 200px;
-  height: 200px;
+  width: 250px;
+  height: 250px;
   display: flex;
   align-items: center;
   justify-content: center;

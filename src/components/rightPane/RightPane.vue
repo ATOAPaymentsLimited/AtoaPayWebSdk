@@ -31,7 +31,7 @@
             </div>
           </div>
         </div>
-        <button class="sdk-action-button" @click="$emit('close')">
+        <button class="sdk-action-button" @click="handleClose">
           <img src="@/assets/images/icon_close.svg" alt="Close" />
         </button>
       </div>
@@ -54,7 +54,7 @@
             </div>
 
             <div v-else-if="currentView === 'View4'" class="view-container-flex">
-              <PaymentVerification v-if="selectedBank" :selected-bank="selectedBank" @cancel="handleCancel"
+              <PaymentVerification v-if="selectedBank" :selected-bank="selectedBank"
                 @success="setCurrentView('View5')" />
             </div>
 
@@ -64,6 +64,8 @@
           </div>
         </Transition>
       </div>
+      <CancellationDialog :show="showCancellationDialog" @dismiss="showCancellationDialog = false"
+        @confirm="confirmClose" />
     </div>
   </div>
 </template>
@@ -77,6 +79,7 @@ import PaymentOptions from '@/components/rightPane/paymentOptions/PaymentOptions
 import PaymentVerification from '@/components/rightPane/paymentVerification/PaymentVerification.vue'
 import PaymentStatus from '@/components/rightPane/paymentStatus/PaymentStatus.vue'
 import type PaymentDetails from '@/core/types/PaymentDetails'
+import CancellationDialog from './CancellationDialog.vue'
 
 const props = defineProps({
   isFetchingInitialData: {
@@ -144,8 +147,15 @@ const handleOnBankSelect = (bank: BankData) => {
   setCurrentView('View3');
 };
 
-const handleCancel = () => {
-  setCurrentView('View2');
+const showCancellationDialog = ref(false);
+
+const handleClose = () => {
+  showCancellationDialog.value = true;
+};
+
+const confirmClose = () => {
+  showCancellationDialog.value = false;
+  emit('close');
 };
 
 // TODO: Update this value
@@ -188,6 +198,7 @@ const formattedTimestamp = computed(() => {
   padding: 16px 0 16px 32px;
   overflow: hidden;
   height: 100%;
+  position: relative;
 }
 
 .sdk-right-pane-header {

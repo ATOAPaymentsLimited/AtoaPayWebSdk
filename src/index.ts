@@ -27,7 +27,6 @@ const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk, {
 
 interface DialogOptions {
   paymentRequestId: string;
-  qrCodeUrl: string;
 }
 
 customElements.define("atoa-pay-sdk-dialog", AtoaPaySdkDialogElement);
@@ -101,7 +100,6 @@ export default class AtoaWebSdk {
 
       Object.assign(this.dialogElement, {
         paymentRequestId: options.paymentRequestId,
-        qrCodeUrl: options.qrCodeUrl,
         environment: this.providedEnvironment,
       });
 
