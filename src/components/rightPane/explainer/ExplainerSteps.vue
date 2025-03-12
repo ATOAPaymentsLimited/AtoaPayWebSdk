@@ -9,7 +9,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { isMobile, getOS } from '@/core/utils/common'
+import { isMobile } from '@/core/utils/common'
 
 const steps = ref(isMobile() ? [
   'Your <strong>bank app</strong> will open on selection automatically if it\’s installed',

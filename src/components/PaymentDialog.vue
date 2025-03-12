@@ -25,6 +25,7 @@ const banksList = ref<BankData[]>([]);
 const paymentAmount = ref(0);
 const storeImageUrl = ref("");
 const merchantBusinessName = ref("");
+
 const props = defineProps({
   paymentRequestId: {
     type: String,
@@ -62,6 +63,10 @@ async function fetchPaymentRequestDetails() {
     const paymentsService = new PaymentsService();
     const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(props.paymentRequestId);
     paymentRequestDetails.value = paymentRequestResponseData;
+    paymentAmount.value = paymentRequestResponseData.amount.amount;
+    storeImageUrl.value = paymentRequestResponseData.storeImg || "";
+    merchantBusinessName.value =
+      paymentRequestResponseData.merchantBusinessName;
     paymentAmount.value = paymentRequestResponseData.amount.amount;
     storeImageUrl.value = paymentRequestResponseData.storeImg || "";
     merchantBusinessName.value =
@@ -119,7 +124,10 @@ onUnmounted(() => {
   border-radius: 16px;
   width: 60%;
   max-width: 1200px;
+  max-width: 1200px;
   height: 60%;
+  max-height: 60vh;
+  overflow: hidden;
   max-height: 60vh;
   overflow: hidden;
 }
