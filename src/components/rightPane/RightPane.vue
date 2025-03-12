@@ -8,6 +8,15 @@
               <img src="@/assets/images/icon_back.svg" alt="Back" />
             </button>
           </div>
+          <div class="spacer" :style="{
+            width: isMobileWidth
+              ? currentView === 'View2'
+                ? '15vw'
+                : currentView === 'View4'
+                  ? '20vw'
+                  : '25vw'
+              : '0px',
+          }"></div>
           <div v-if="!isFetchingInitialData" :key="currentView" class="sdk-right-pane-header-text">
             <div v-if="currentView === 'View1'">
               <h2>Continue to your bank</h2>
@@ -49,8 +58,8 @@
 
             <div v-else-if="currentView === 'View3'">
               <PaymentOptions v-if="selectedBank && paymentDetails" :selected-bank="selectedBank"
-                :qr-code-url="qrCodeUrl" :bank-website-url="bankWebsiteUrl" @bank-change="setCurrentView('View2')"
-                @status-change="setCurrentView('View4')" :payment-details="paymentDetails" />
+                :payment-details="paymentDetails" @bank-change="setCurrentView('View2')"
+                @status-change="setCurrentView('View4')" />
             </div>
 
             <div v-else-if="currentView === 'View4'" class="view-container-flex">
@@ -59,7 +68,7 @@
             </div>
 
             <div v-else-if="currentView === 'View5'" class="view-container-flex">
-              <PaymentStatus @close="emit('close')" />
+              <PaymentStatus @success="(data) => emit('success', data)" />
             </div>
           </div>
         </Transition>
@@ -71,7 +80,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, ref, toRefs, type Ref } from 'vue'
+import { computed, inject, ref, toRefs, type ComputedRef, type Ref } from 'vue'
 import ExplainerUI from '@/components/rightPane/explainer/ExplainerUI.vue'
 import SelectBank from '@/components/rightPane/selectBank/SelectBank.vue'
 import type BankData from '@/core/types/BankData'
@@ -79,7 +88,7 @@ import PaymentOptions from '@/components/rightPane/paymentOptions/PaymentOptions
 import PaymentVerification from '@/components/rightPane/paymentVerification/PaymentVerification.vue'
 import PaymentStatus from '@/components/rightPane/paymentStatus/PaymentStatus.vue'
 import type PaymentDetails from '@/core/types/PaymentDetails'
-import CancellationDialog from './CancellationDialog.vue'
+import CancellationDialog from '@/components/rightPane/CancellationDialog.vue'
 
 const props = defineProps({
   isFetchingInitialData: {
@@ -89,21 +98,24 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
-  close: [],
+  close: [data?: any],
+  success: [data?: any],
 }>();
 
 const { isFetchingInitialData } = toRefs(props);
+const paymentRequestId = inject<string>('paymentRequestId');
 const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
+const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 
 const views = ['View1', 'View2', 'View3', 'View4', 'View5'] as const
 type ViewType = typeof views[number]
 
 const currentView = ref<ViewType>('View1')
 const selectedBank = ref<BankData | null>();
-const qrCodeUrl = ref<string>('');
-const bankWebsiteUrl = ref<string>('');
 
-const showBackButton = computed(() => currentView.value === 'View3' || currentView.value === 'View4');
+const showBackButton = computed(
+  () => currentView.value === "View3" || currentView.value === "View4"
+);
 
 const goToPreviousView = () => {
   const currentIndex = views.indexOf(currentView.value);
@@ -112,8 +124,8 @@ const goToPreviousView = () => {
 };
 
 const setCurrentView = (view: ViewType) => {
-  currentView.value = view
-}
+  currentView.value = view;
+};
 
 const enter = (el: Element, done: () => void) => {
   const animation = (el as HTMLElement).animate(
@@ -155,7 +167,7 @@ const handleClose = () => {
 
 const confirmClose = () => {
   showCancellationDialog.value = false;
-  emit('close');
+  emit('close', { paymentRequestId: paymentRequestId });
 };
 
 // TODO: Update this value
@@ -317,5 +329,36 @@ const formattedTimestamp = computed(() => {
   font-weight: 700;
   margin: 0;
   color: var(--base-black);
+}
+
+@media (max-width: 768px) {
+  .view {
+    padding-right: 0px;
+  }
+
+  .sdk-right-pane {
+    padding: 16px;
+  }
+
+  .sdk-right-pane .explainer-ui {
+    padding: 0px;
+  }
+
+  .sdk-right-pane-header-text p {
+    text-align: center;
+  }
+
+  .view-content {
+    padding: 0;
+  }
+
+  .sdk-action-button {
+    padding: 0px;
+    margin-right: 0px;
+  }
+}
+
+.spacer-hidden {
+  display: none;
 }
 </style>

@@ -1,5 +1,4 @@
 import type { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
-import type TransactionDetails from "@/core/types/TransactionDetails.ts";
 import { API_METHODS, ApiClient } from "@/core/utils/http-client";
 import { apiCall, api_urls } from "@/core/utils/http-utils";
 import type PaymentDetails from "@/core/types/PaymentDetails";
@@ -7,6 +6,7 @@ import type BankData from "@/core/types/BankData";
 import { detectBrowser, isMobile } from "@/core/utils/common";
 import { SourceTypeEnum } from "@/core/types/common";
 import type PaymentAuthResponse from "@/core/types/PaymentAuthResponse";
+import type PaymentRequestStatusDetails from "@/core/types/PaymentRequestStatusDetails";
 
 export class PaymentsService {
   private http: ApiClient | never;
@@ -104,8 +104,8 @@ export class PaymentsService {
   getPaymentStatusByID(
     paymentRequestId: string,
     params: { env: EnvironmentTypeEnum }
-  ): Promise<TransactionDetails> {
-    return apiCall<TransactionDetails>(async () => {
+  ): Promise<PaymentRequestStatusDetails> {
+    return apiCall<PaymentRequestStatusDetails>(async () => {
       const paramsLocal: { env: EnvironmentTypeEnum } = {
         env: params.env.toLowerCase() as EnvironmentTypeEnum,
       };

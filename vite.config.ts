@@ -18,7 +18,7 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
       formats: ["es"],
-      name: "AtoaWebSdk",
+      name: "AtoaPayWebSdk",
       fileName: (format) => `atoa-web-sdk.${format}.js`,
     },
     rollupOptions: {

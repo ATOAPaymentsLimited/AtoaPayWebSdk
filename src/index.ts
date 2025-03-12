@@ -103,17 +103,20 @@ export default class AtoaWebSdk {
         environment: this.providedEnvironment,
       });
 
-      this.dialogElement.addEventListener("success", () => {
+      this.dialogElement.addEventListener("success", (event: Event) => {
+        const customEvent = event as CustomEvent;
         this._removeDialog();
         resolve({
-          paymentRequestId: options.paymentRequestId,
+          data: customEvent.detail,
         });
       });
 
-      this.dialogElement.addEventListener("close", () => {
+      this.dialogElement.addEventListener("close", (event: Event) => {
+        const customEvent = event as CustomEvent;
         this._removeDialog();
         resolve({
-          paymentRequestId: options.paymentRequestId,
+          status: "cancelled",
+          data: customEvent.detail,
         });
       });
 

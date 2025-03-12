@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "serve-example": "vite example",
     "serve-http": "npx http-server . -o /example/index.html",
-    "watch": "vue-tsc -b && vite build --watch"
+    "watch": "vue-tsc -b && vite build --watch",
+    "optimize:icons": "svgo -f ./assets/icon-pack/filled && svgo -f ./assets/icon-pack/outlined"
   },
   "devDependencies": {
     "@chenfengyuan/vue-qrcode": "^2.0.0",

@@ -1,46 +1,94 @@
 <template>
   <div class="payment-status">
-    <div v-show="!showNextUI" class="success-content fade-out">
+    <div v-show="showSuccessAnimation" class="success-content fade-out">
       <div class="success-animation">
         <img src="@/assets/images/payment_success.gif" alt="Payment Success" class="success-gif" />
       </div>
       <div class="success-title">Payment successful</div>
     </div>
 
-    <div v-show="showNextUI" class="next-content slide-up">
-      <PaymentDetails @close="emit('close')" />
+    <div v-show="!showSuccessAnimation" class="next-content slide-up">
+      <PaymentDetails :request-status-details="requestStatusDetails" />
+      <div v-show="showCountdown" class="redirect-message">
+        You will be redirected in <strong>{{ countdown }}</strong> seconds
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, type PropType } from 'vue';
+import { ref, onMounted, inject, onUnmounted } from 'vue';
 import PaymentDetails from '@/components/rightPane/paymentDetails/PaymentDetails.vue';
-import type TransactionDetails from '@/core/types/TransactionDetails';
+import { EnvironmentTypeEnum } from '@/core/types/Environment';
+import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
+import { PaymentsService } from '@/core/services/PaymentsService';
 
-const emit = defineEmits(['close']);
-const props = defineProps({
-  transactionDetails: {
-    type: Object as PropType<TransactionDetails>,
-    required: false,
+const emit = defineEmits<{
+  success: [data?: any],
+}>(); const showSuccessAnimation = ref(false);
+const paymentService = new PaymentsService();
+const requestStatusDetails = ref<PaymentRequestStatusDetails>();
+const paymentRequestId = inject<string>('paymentRequestId');
+const environment = inject<EnvironmentTypeEnum>('environment');
+const pollInterval = ref<number | null>(null);
+const countdown = ref(5);
+const showCountdown = ref(false);
+
+const triggerSuccessView = () => {
+  showSuccessAnimation.value = true;
+  setTimeout(() => {
+    showSuccessAnimation.value = false;
+    showCountdown.value = true;
+    startCountdown();
+  }, 3000);
+};
+
+const pollPaymentStatus = async () => {
+  try {
+    const result = await paymentService.getPaymentStatusByID(
+      paymentRequestId || "",
+      { env: environment || EnvironmentTypeEnum.SANDBOX }
+    );
+
+    requestStatusDetails.value = result;
+
+    if (result.status === "COMPLETED") {
+      triggerSuccessView();
+      if (pollInterval.value) {
+        clearInterval(pollInterval.value);
+      }
+    } else if (['EXPIRED', 'FAILED'].includes(result.status)) {
+      if (pollInterval.value) {
+        clearInterval(pollInterval.value);
+        showCountdown.value = true;
+        startCountdown();
+      }
+    }
+  } catch (error) {
+    console.error('Error polling payment status:', error);
   }
-});
+};
 
-const showNextUI = ref(false);
+const startCountdown = () => {
+  const timer = setInterval(() => {
+    countdown.value--;
+    if (countdown.value <= 0) {
+      clearInterval(timer);
+      emit('success', { paymentIdempotencyId: requestStatusDetails.value?.transactionDetails?.[0]?.paymentIdempotencyId, status: requestStatusDetails.value?.status });
+    }
+  }, 1000);
+};
 
 onMounted(() => {
-  if (props.transactionDetails?.status !== "COMPLETED") {
-    triggerStatusUI();
-  } else {
-    setTimeout(() => {
-      triggerStatusUI();
-    }, 2000);
-  }
+  pollPaymentStatus();
+  pollInterval.value = setInterval(pollPaymentStatus, 3000);
 });
 
-const triggerStatusUI = () => {
-  showNextUI.value = true;
-};
+onUnmounted(() => {
+  if (pollInterval.value) {
+    clearInterval(pollInterval.value);
+  }
+});
 </script>
 
 <style scoped>
@@ -81,7 +129,7 @@ const triggerStatusUI = () => {
   font-size: 16px;
   font-weight: 700;
   height: 1.45;
-  color: var(--base-black)
+  color: var(--base-black);
 }
 
 .fade-out {
@@ -123,5 +171,11 @@ const triggerStatusUI = () => {
     transform: translateY(0);
     opacity: 1;
   }
+}
+
+.payment-amount-text {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--base-black);
 }
 </style>

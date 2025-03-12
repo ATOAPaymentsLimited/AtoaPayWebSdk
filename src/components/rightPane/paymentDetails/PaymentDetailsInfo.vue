@@ -23,9 +23,10 @@
       <div class="reference-row">
         <div class="value-container">
           <div class="label-text">Reference ID</div>
-          <div class="value-text">{{ transactionDetails?.paymentIdempotencyId }}</div>
+          <div class="value-text">{{ requestStatusDetails?.transactionDetails?.[0]?.paymentIdempotencyId }}</div>
         </div>
-        <button class="copy-button" @click="copyToClipboard(transactionDetails?.paymentIdempotencyId ?? '')">
+        <button class="copy-button"
+          @click="copyToClipboard(requestStatusDetails?.transactionDetails?.[0]?.paymentIdempotencyId ?? '')">
           <img src="@/assets/images/icon_copy.svg" alt="Copy" />
         </button>
       </div>
@@ -33,9 +34,9 @@
       <div class="reference-row">
         <div class="value-container">
           <div class="label-text">Order ID</div>
-          <div class="value-text">{{ transactionDetails?.orderId }}</div>
+          <div class="value-text">{{ requestStatusDetails?.orderId }}</div>
         </div>
-        <button class="copy-button" @click="copyToClipboard(transactionDetails?.orderId ?? '')">
+        <button class="copy-button" @click="copyToClipboard(requestStatusDetails?.orderId ?? '')">
           <img src="@/assets/images/icon_copy.svg" alt="Copy" />
         </button>
       </div>
@@ -44,12 +45,12 @@
 </template>
 
 <script setup lang="ts">
-import type TransactionDetails from '@/core/types/TransactionDetails';
+import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
 import type { PropType } from 'vue';
 
 defineProps({
-  transactionDetails: {
-    type: Object as PropType<TransactionDetails>,
+  requestStatusDetails: {
+    type: Object as PropType<PaymentRequestStatusDetails>,
     required: false,
   },
 });

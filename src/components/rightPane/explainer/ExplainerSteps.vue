@@ -9,8 +9,13 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { isMobile, getOS } from '@/core/utils/common'
 
-const steps = ref([
+const steps = ref(isMobile() ? [
+  'Your <strong>bank app</strong> will open on selection automatically if it\’s installed',
+  'You can <strong>login securely</strong> and approve your payment. Your details stay confidential.',
+  'Once the payment\’s <strong>confirmed</strong>, we’ll redirect you to the success page.'
+] : [
   '<strong>Select the bank</strong> you\'d like to use for making the payment.',
   '<strong>Scan the QR</strong> from your phone to open your <strong>bank app</strong> or visit your <strong>bank website.</strong>',
   'You can <strong>login securely</strong> and <strong>approve</strong> your payment. Your details stay confidential.'

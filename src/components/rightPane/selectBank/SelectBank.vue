@@ -192,4 +192,10 @@ async function fetchBanksList() {
 :deep(.bank-list) {
   padding-right: 0;
 }
+
+@media (max-width: 768px) {
+  .select-bank {
+    padding-right: 0px;
+  }
+}
 </style>

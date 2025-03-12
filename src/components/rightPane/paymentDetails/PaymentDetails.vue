@@ -1,5 +1,5 @@
 <template>
-  <div v-if="transactionDetails?.status === 'COMPLETED'" class="status-section completed">
+  <div v-if="requestStatusDetails?.status === 'COMPLETED'" class="status-section completed">
     <div class="status-icon">
       <img src="@/assets/images/icon_success.svg" alt="Payment Success" />
     </div>
@@ -9,7 +9,7 @@
     </div>
   </div>
 
-  <div v-else-if="transactionDetails?.status === 'FAILED'" class="status-section failed">
+  <div v-else-if="requestStatusDetails?.status === 'FAILED'" class="status-section failed">
     <div class="status-icon">
       <img src="@/assets/images/icon_failed.svg" alt="Payment Success" />
     </div>
@@ -20,7 +20,7 @@
     </div>
   </div>
 
-  <div v-else-if="transactionDetails?.status === 'EXPIRED'" class="status-section expired">
+  <div v-else-if="requestStatusDetails?.status === 'EXPIRED'" class="status-section expired">
     <div class="status-icon">
       <img src="@/assets/images/icon_expired.svg" alt="Payment Success" />
     </div>
@@ -40,70 +40,18 @@
     </div>
   </div>
 
-  <PaymentDetailsInfo v-if="transactionDetails" :transaction-details="transactionDetails" />
-
-  <div v-show="showCountdown" class="redirect-message">
-    You will be redirected in <strong>{{ countdown }}</strong> seconds
-  </div>
+  <PaymentDetailsInfo v-if="requestStatusDetails" :request-status-details="requestStatusDetails" />
 </template>
 
 <script setup lang="ts">
-import PaymentDetailsInfo from './PaymentDetailsInfo.vue';
-import { inject, onMounted, onUnmounted, ref } from 'vue';
-import { PaymentsService } from '@/core/services/PaymentsService';
-import type TransactionDetails from '@/core/types/TransactionDetails';
-import { EnvironmentTypeEnum } from '@/core/types/Environment';
+import PaymentDetailsInfo from '@/components/rightPane/paymentDetails/PaymentDetailsInfo.vue';
+import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
+import type { PropType } from 'vue';
 
-const paymentService = new PaymentsService();
-const transactionDetails = ref<TransactionDetails | null>(null);
-const paymentRequestId = inject<string>('paymentRequestId');
-const environment = inject<EnvironmentTypeEnum>('environment');
-const countdown = ref(5);
-const showCountdown = ref(false);
-const pollInterval = ref<number | null>(null);
-const emit = defineEmits<{
-  close: [],
-}>();
-
-const pollPaymentStatus = async () => {
-  try {
-    const result = await paymentService.getPaymentStatusByID(
-      paymentRequestId || "",
-      { env: environment || EnvironmentTypeEnum.SANDBOX }
-    );
-
-    transactionDetails.value = result;
-
-    if (['COMPLETED', 'FAILED', 'EXPIRED'].includes(result.status)) {
-      if (pollInterval.value) {
-        clearInterval(pollInterval.value);
-        showCountdown.value = true;
-        startCountdown();
-      }
-    }
-  } catch (error) {
-    console.error('Error polling payment status:', error);
-  }
-};
-
-const startCountdown = () => {
-  const timer = setInterval(() => {
-    countdown.value--;
-    if (countdown.value <= 0) {
-      clearInterval(timer);
-      emit('close');
-    }
-  }, 1000);
-};
-
-onMounted(() => {
-  pollPaymentStatus();
-  pollInterval.value = setInterval(pollPaymentStatus, 3000);
-});
-
-onUnmounted(() => {
-  if (pollInterval.value) {
-    clearInterval(pollInterval.value);
+defineProps({
+  requestStatusDetails: {
+    type: Object as PropType<PaymentRequestStatusDetails>,
+    required: false,
   }
 });
 </script>

@@ -1,17 +1,20 @@
 <template>
   <script type="application/javascript" defer src="qrcode.vue.browser.min.js"></script>
-  <div class="sdk-dialog-container">
+  <div class="sdk-dialog-container" ref="dialogContainer">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
-      <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId" @close="emit('close')" />
+      <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId"
+        @success="(data) => emit('success', data)" @close="handleClose" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import PaymentDialog from '@/components/PaymentDialog.vue';
-import { onErrorCaptured, onMounted } from 'vue';
+import { onErrorCaptured, onMounted, ref } from 'vue';
 import { sdkTheme } from "@/assets/colors/colors";
 import type { EnvironmentTypeEnum } from '@/core/types/Environment';
+
+const dialogContainer = ref<HTMLElement | null>(null);
 
 defineProps<{
   paymentRequestId: string,
@@ -53,7 +56,21 @@ onMounted(() => {
   });
 });
 
-const emit = defineEmits(['confirm', 'cancel', 'close']);
+const emit = defineEmits<{
+  close: [data?: any],
+  success: [data?: any],
+}>();
+
+function handleClose(data: any) {
+  if (dialogContainer.value) {
+    const event = new CustomEvent('close', {
+      detail: data,
+      bubbles: true,
+      composed: true
+    });
+    dialogContainer.value.dispatchEvent(event);
+  }
+}
 </script>
 
 <style>

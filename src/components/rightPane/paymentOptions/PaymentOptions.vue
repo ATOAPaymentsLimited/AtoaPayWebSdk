@@ -1,5 +1,32 @@
 <template>
   <div class="payment-options">
+    <div v-if="isMobile()" class="bank-app-info">
+      <img src="@/assets/images/icon_info.svg" height="16px" width="16px" />
+      <p class="bank-app-confirmation">
+        We'll send you to your bank's app or website to confirm this payment.
+      </p>
+    </div>
+
+    <div v-if="isMobile()" class="mobile-merchant-details">
+      <div class="payment-options-header">
+        <div class="store-image">
+          <img :src="!(paymentRequestDetails?.storeImg) ? storeImagePlaceholder : paymentRequestDetails?.storeImg"
+            height="40px" width="40px" />
+        </div>
+        <div class="merchant-details">
+          <div class="paying-to">
+            Paying to
+          </div>
+          <div class="merchant-business-name">
+            {{ paymentRequestDetails?.merchantBusinessName }}
+          </div>
+        </div>
+        <div class="payment-amount">
+          £{{ paymentRequestDetails?.amount?.amount.toFixed(2) ?? 0.00 }}
+        </div>
+      </div>
+    </div>
+
     <div class="payment-options-header">
       <div class="bank-info">
         <div class="bank-logo">
@@ -13,37 +40,52 @@
       <button class="change-button" @click="$emit('bankChange')">Change</button>
     </div>
 
-    <div class="qr-section">
-      <p class="qr-instructions-bold">Scan with your phone camera</p>
-      <p class="qr-instructions">to confirm in your bank app.</p>
-      <div class="qr-container">
-        <div v-if="isLoading" class="qr-code-placeholder">
-          <div class="loading-spinner"></div>
-        </div>
-        <div v-else-if="qrLoadError" class="qr-error">
-          QR code failed to load. Please try refreshing the page.
-        </div>
-        <div v-else class="qrcode">
-          <vue-qrcode :value="bankWebsiteUrl" tag="svg" :options="{
-            errorCorrectionLevel: 'Q',
-            width: 250,
-          }"></vue-qrcode>
-          <img class="qrcode__image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
-        </div>
+    <div v-if="isMobile()" class="mobile-footer-section">
+      <button class="go-to-bank-button" @click="handleGoToBankButtonClick">
+        Go to {{ selectedBank.name }}
+      </button>
+      <div class="powered-by">
+        Powered by <img src="@/assets/images/atoa_logo.svg" alt="AtoA" class="atoa-small-logo" />
+      </div>
+      <div class="atoa-terms">
+        <a href="https://paywithatoa.co.uk/terms/" class="footer-link">Atoa's terms</a> and
+        <a href="https://paywithatoa.co.uk/atoa-business-privacy-policy/" class="footer-link">privacy policy</a>.
       </div>
     </div>
+    <div class="desktop-footer-section">
+      <div class="qr-section">
+        <p class="qr-instructions-bold">Scan with your phone camera</p>
+        <p class="qr-instructions">to confirm in your bank app.</p>
+        <div class="qr-container">
+          <div v-if="isLoading" class="qr-code-placeholder">
+            <div class="loading-spinner"></div>
+          </div>
+          <div v-else-if="qrLoadError" class="qr-error">
+            QR code failed to load. Please try refreshing the page.
+          </div>
+          <div v-else class="qrcode">
+            <vue-qrcode :value="bankWebsiteUrl" tag="svg" :options="{
+              errorCorrectionLevel: 'Q',
+              width: 250,
+            }"></vue-qrcode>
+            <img class="qrcode-mask-image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
+          </div>
+        </div>
+      </div>
 
-    <div class="divider">
-      <span>Or</span>
+      <div class="divider">
+        <span>Or</span>
+      </div>
+
+      <a :href="bankWebsiteUrl" target="_blank" class="bank-website-link">
+        Go to your bank website
+      </a>
     </div>
-
-    <a :href="bankWebsiteUrl" target="_blank" class="bank-website-link">
-      Go to your bank website
-    </a>
   </div>
 </template>
 
 <script setup lang="ts">
+import storeImagePlaceholder from "@/assets/images/store_image_placeholder.svg";
 import { ref, onMounted, inject, onUnmounted, type Ref } from 'vue';
 import type BankData from '@/core/types/BankData';
 import type PaymentDetails from '@/core/types/PaymentDetails';
@@ -51,6 +93,8 @@ import { PaymentsService } from '@/core/services/PaymentsService';
 import type PaymentAuthResponse from '@/core/types/PaymentAuthResponse';
 import { EnvironmentTypeEnum } from '@/core/types/Environment';
 import VueQrcode from '@chenfengyuan/vue-qrcode';
+import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
+import { goToBank, isMobile } from '@/core/utils/common';
 
 const props = defineProps<{
   selectedBank: BankData;
@@ -61,11 +105,11 @@ const bankWebsiteUrl = ref('');
 
 const emit = defineEmits<{
   (e: 'bankChange'): void;
-  (e: 'statusChange'): void
+  (e: 'statusChange', requestStatusDetails: PaymentRequestStatusDetails): void;
 }>();
 
 const paymentRequestId = inject<string>('paymentRequestId');
-inject<Ref<PaymentDetails>>('paymentRequestDetails');
+const paymentRequestDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
 const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
@@ -78,6 +122,23 @@ const getBankLogo = (bank: BankData | undefined) => {
   const logoMedia = bank.media.find(m => m.type === 'logo');
   return logoMedia ? logoMedia.source : '';
 };
+
+const handleGoToBankButtonClick = () => {
+  goToBank(
+    {
+      authorisationUrl: paymentAuthResponse.value?.authorisationUrl ?? '',
+      deepLinkAuthorisationUrlIOS: paymentAuthResponse.value?.deepLinkAuthorisationUrlIOS,
+      businessAppDeepLinkAuthorisationUrl:
+        paymentAuthResponse.value?.businessAppDeepLinkAuthorisationUrl,
+      businessAppDeepLinkAndroidAuthorisationUrl:
+        paymentAuthResponse.value?.businessAppDeepLinkAndroidAuthorisationUrl,
+      deepLinkAuthorisationUrl: paymentAuthResponse.value?.deepLinkAuthorisationUrl,
+      businessAppDeepLinkAuthorisationUrlIOS:
+        paymentAuthResponse.value?.businessAppDeepLinkAuthorisationUrlIOS,
+    },
+    props.selectedBank.businessBank,
+  );
+}
 
 const fetchAuthorisationData = async () => {
   try {
@@ -95,16 +156,14 @@ const fetchAuthorisationData = async () => {
 const checkPaymentStatus = async () => {
   try {
     // TODO: Confirm this logic
-    const paymentStatusData = await paymentsService.getPaymentStatusByID(
+    const requestStatusData = await paymentsService.getPaymentStatusByID(
       paymentRequestId || "",
       { env: environment || EnvironmentTypeEnum.SANDBOX }
     );
 
-    console.log(paymentStatusData.status);
-
-    if (paymentStatusData.status !== 'AWAITING_AUTHORIZATION') {
+    if (!['PAYMENT_NOT_INITIATED', 'AWAITING_AUTHORIZATION'].includes(requestStatusData.status)) {
       clearInterval(pollInterval.value!);
-      emit('statusChange');
+      emit('statusChange', requestStatusData);
     }
   } catch (error) {
     console.error('Failed to check payment status:', error);
@@ -150,9 +209,27 @@ onUnmounted(() => {
   gap: 16px;
 }
 
+.bank-app-info {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  background: var(--info-subtle);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  color: var(--info-darker);
+  box-sizing: border-box;
+}
+
+.bank-app-confirmation {
+  margin: 0;
+  font-size: 12px;
+}
+
 .bank-logo {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -239,7 +316,7 @@ onUnmounted(() => {
   position: relative;
 }
 
-.qrcode__image {
+.qrcode-mask-image {
   background-color: var(--base-white);
   border-radius: 6px;
   overflow: hidden;
@@ -312,5 +389,110 @@ onUnmounted(() => {
   font-size: 12px;
   margin-top: 8px;
   text-align: center;
+}
+
+.desktop-footer-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.mobile-merchant-details {
+  width: 100%;
+}
+
+.mobile-footer-section {
+  width: 100%;
+}
+
+.merchant-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.paying-to {
+  font-size: 12px;
+  color: var(--grey-500);
+  font-weight: 600;
+}
+
+.merchant-business-name {
+  font-size: 14px;
+  color: var(--base-black);
+  font-weight: 700;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.store-image {
+  border: 1px solid var(--grey-100);
+  border-radius: 6px;
+  width: 40px;
+  height: 40px;
+}
+
+.payment-amount {
+  font-size: 16px;
+  color: var(--base-black);
+  font-weight: 700;
+}
+
+.store-image img {
+  border-radius: 6px;
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.go-to-bank-button {
+  width: 100%;
+  background: #1A1A1A;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-family: inherit;
+}
+
+.atoa-terms {
+  color: var(--grey-500);
+  font-size: 11px;
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+}
+
+.footer-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.powered-by {
+  text-align: center;
+  color: var(--grey-500);
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.atoa-small-logo {
+  height: 12px;
+  filter: invert(49%) sepia(17%) saturate(486%) hue-rotate(163deg) brightness(95%) contrast(89%);
 }
 </style>

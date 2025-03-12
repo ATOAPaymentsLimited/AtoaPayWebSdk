@@ -1,3 +1,5 @@
+import type BankRedirectionUrls from "@/core/types/BankRedirectionUrls";
+
 export function detectBrowser() {
   const userAgent = navigator.userAgent;
   let browserName = "Unknown";
@@ -77,3 +79,55 @@ export const formatDate = (dateString: string) => {
 
   return formattedTime;
 };
+
+export const splitDouble = (amount: number): number[] => {
+  const [whole, decimal = "00"] = amount.toFixed(2).split(".");
+  return [parseInt(whole), parseInt(decimal)];
+};
+
+export async function goToBank(
+  bankRedirectionUrls: BankRedirectionUrls,
+  isBusinessBank = false
+) {
+  return new Promise((_, reject) => {
+    if (bankRedirectionUrls.authorisationUrl.length == 0) reject();
+
+    let bankDeeplinkUrl;
+
+    if (isAndroid()) {
+      const hasBusinessBankUrl =
+        isBusinessBank &&
+        bankRedirectionUrls.businessAppDeepLinkAuthorisationUrl &&
+        bankRedirectionUrls.businessAppDeepLinkAuthorisationUrl !== "";
+
+      bankDeeplinkUrl = hasBusinessBankUrl
+        ? bankRedirectionUrls.businessAppDeepLinkAuthorisationUrl
+        : bankRedirectionUrls.deepLinkAuthorisationUrl;
+    }
+    if (isIos()) {
+      const hasBusinessBankUrl =
+        isBusinessBank &&
+        bankRedirectionUrls.businessAppDeepLinkAuthorisationUrlIOS &&
+        bankRedirectionUrls.businessAppDeepLinkAuthorisationUrlIOS !== "";
+
+      bankDeeplinkUrl = hasBusinessBankUrl
+        ? bankRedirectionUrls.businessAppDeepLinkAuthorisationUrlIOS
+        : bankRedirectionUrls.deepLinkAuthorisationUrlIOS;
+    }
+
+    if (bankDeeplinkUrl) {
+      handleDeeplinkFailure(bankRedirectionUrls.authorisationUrl);
+
+      window.open(bankDeeplinkUrl, "_blank");
+      return;
+    }
+
+    window.open(bankRedirectionUrls.authorisationUrl, "_blank");
+  });
+}
+
+function handleDeeplinkFailure(authorisationUrl: string) {
+  setTimeout(() => {
+    window.open(authorisationUrl, "_blank");
+  }, 3000);
+}

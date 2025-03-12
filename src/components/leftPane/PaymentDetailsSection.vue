@@ -19,6 +19,7 @@
 
 <script setup lang="ts">
 import storeImagePlaceholder from "@/assets/images/store_image_placeholder.svg";
+import { splitDouble } from "@/core/utils/common";
 import { computed } from 'vue';
 
 const props = defineProps({
@@ -41,10 +42,8 @@ const props = defineProps({
 });
 
 const splitAmount = computed(() => {
-  const [whole, decimal = '00'] = props.amount.toFixed(2).split('.');
-  return [parseInt(whole), parseInt(decimal)];
+  return splitDouble(props.amount);
 });
-
 </script>
 
 <style scoped>
