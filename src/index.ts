@@ -31,7 +31,7 @@ interface DialogOptions {
 
 customElements.define("atoa-pay-sdk-dialog", AtoaPaySdkDialogElement);
 
-export default class AtoaWebSdk {
+export class AtoaWebSdk {
   private eventListeners: Map<string, Function[]>;
   private dialogElement: HTMLElement | null;
   private providedEnvironment: EnvironmentTypeEnum | undefined;

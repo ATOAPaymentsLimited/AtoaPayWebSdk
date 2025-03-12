@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, provide, type PropType, computed, onUnmounted } from 'vue';
+import { onMounted, ref, provide, computed, onUnmounted, inject } from 'vue';
 import LeftPane from '@/components/leftPane/LeftPane.vue';
 import RightPane from "@/components/rightPane/RightPane.vue";
 import type PaymentDetails from '@/core/types/PaymentDetails';
@@ -25,16 +25,13 @@ const banksList = ref<BankData[]>([]);
 const paymentAmount = ref(0);
 const storeImageUrl = ref("");
 const merchantBusinessName = ref("");
+const environment = inject<EnvironmentTypeEnum>('environment');
 
 const props = defineProps({
   paymentRequestId: {
     type: String,
     required: true,
   },
-  environment: {
-    type: Object as PropType<EnvironmentTypeEnum>,
-    required: true,
-  }
 });
 
 const emit = defineEmits<{
@@ -49,7 +46,6 @@ provide("isMobileWidth", isMobileWidth);
 provide('paymentRequestId', props.paymentRequestId);
 provide('banksList', banksList);
 provide('paymentRequestDetails', paymentRequestDetails);
-provide('environment', props.environment);
 
 onMounted(() => {
   fetchPaymentRequestDetails();
@@ -61,7 +57,9 @@ async function fetchPaymentRequestDetails() {
 
   try {
     const paymentsService = new PaymentsService();
-    const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(props.paymentRequestId);
+    const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(props.paymentRequestId,
+      { env: environment || EnvironmentTypeEnum.SANDBOX },
+    );
     paymentRequestDetails.value = paymentRequestResponseData;
     paymentAmount.value = paymentRequestResponseData.amount.amount;
     storeImageUrl.value = paymentRequestResponseData.storeImg || "";

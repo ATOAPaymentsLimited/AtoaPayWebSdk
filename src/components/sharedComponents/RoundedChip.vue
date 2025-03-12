@@ -42,7 +42,6 @@ defineProps({
 }
 
 .atoa-pay-custom-rounded-chip {
-  border: 1px solid;
   border-radius: 100px;
   display: flex;
   align-items: center;

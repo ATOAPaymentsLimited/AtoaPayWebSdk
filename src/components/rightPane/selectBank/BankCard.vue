@@ -99,7 +99,7 @@ const handleClick = () => {
   border: none;
 }
 
-.radio-checkbox:not() .bank-card:hover:not(.disabled) .radio-checkbox {
+.bank-card:hover:not(.disabled) .radio-checkbox:not(.selected) {
   border-color: var(--grey-400);
 }
 

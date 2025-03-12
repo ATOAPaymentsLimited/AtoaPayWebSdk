@@ -24,11 +24,19 @@ export class PaymentsService {
     });
   }
 
-  fetchPaymentDetails(paymentRequestId: string): Promise<PaymentDetails> {
+  fetchPaymentDetails(
+    paymentRequestId: string,
+    params: { env: EnvironmentTypeEnum }
+  ): Promise<PaymentDetails> {
     return apiCall<PaymentDetails>(async () => {
+      const paramsLocal: { env: EnvironmentTypeEnum } = {
+        env: params.env.toLowerCase() as EnvironmentTypeEnum,
+      };
+
       return this.http.makeRequest({
         url: api_urls.GET_PAYMENT_DETAILS,
         method: API_METHODS.POST,
+        params: paramsLocal,
         json: {
           data: paymentRequestId,
           source: "EXTERNAL_MERCHANT",

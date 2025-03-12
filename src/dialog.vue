@@ -10,16 +10,18 @@
 
 <script setup lang="ts">
 import PaymentDialog from '@/components/PaymentDialog.vue';
-import { onErrorCaptured, onMounted, ref } from 'vue';
+import { onErrorCaptured, onMounted, provide, ref } from 'vue';
 import { sdkTheme } from "@/assets/colors/colors";
-import type { EnvironmentTypeEnum } from '@/core/types/Environment';
+import { EnvironmentTypeEnum } from '@/core/types/Environment';
 
 const dialogContainer = ref<HTMLElement | null>(null);
 
-defineProps<{
+const props = defineProps<{
   paymentRequestId: string,
   environment: EnvironmentTypeEnum,
 }>();
+
+provide('environment', props.environment);
 
 onErrorCaptured((error, instance, info) => {
   const errorDetails = {
