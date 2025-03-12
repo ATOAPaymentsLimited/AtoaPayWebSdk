@@ -27,6 +27,7 @@ const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk, {
 
 interface DialogOptions {
   paymentRequestId: string;
+  paymentUrl: string;
 }
 
 customElements.define("atoa-pay-sdk-dialog", AtoaPaySdkDialogElement);
@@ -101,6 +102,7 @@ export class AtoaWebSdk {
       Object.assign(this.dialogElement, {
         paymentRequestId: options.paymentRequestId,
         environment: this.providedEnvironment,
+        paymentUrl: options.paymentUrl,
       });
 
       this.dialogElement.addEventListener("success", (event: Event) => {

@@ -19,9 +19,11 @@ const dialogContainer = ref<HTMLElement | null>(null);
 const props = defineProps<{
   paymentRequestId: string,
   environment: EnvironmentTypeEnum,
+  paymentUrl: string,
 }>();
 
 provide('environment', props.environment);
+provide('paymentUrl', props.paymentUrl);
 
 onErrorCaptured((error, instance, info) => {
   const errorDetails = {

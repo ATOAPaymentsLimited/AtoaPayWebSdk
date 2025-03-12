@@ -1,24 +1,26 @@
 <template>
   <div class="payment-options">
-    <div v-if="isMobile()" class="bank-app-info">
+    <div v-if="isMobileWidth" class="bank-app-info">
       <img src="@/assets/images/icon_info.svg" height="16px" width="16px" />
       <p class="bank-app-confirmation">
         We'll send you to your bank's app or website to confirm this payment.
       </p>
     </div>
 
-    <div v-if="isMobile()" class="mobile-merchant-details">
+    <div v-if="isMobileWidth" class="mobile-merchant-details">
       <div class="payment-options-header">
-        <div class="store-image">
-          <img :src="!(paymentRequestDetails?.storeImg) ? storeImagePlaceholder : paymentRequestDetails?.storeImg"
-            height="40px" width="40px" />
-        </div>
-        <div class="merchant-details">
-          <div class="paying-to">
-            Paying to
+        <div class="merchant-details-row">
+          <div class="store-image">
+            <img :src="!(paymentRequestDetails?.storeImg) ? storeImagePlaceholder : paymentRequestDetails?.storeImg"
+              height="40px" width="40px" />
           </div>
-          <div class="merchant-business-name">
-            {{ paymentRequestDetails?.merchantBusinessName }}
+          <div class="merchant-details-column">
+            <div class="paying-to">
+              Paying to
+            </div>
+            <div class="merchant-business-name">
+              {{ paymentRequestDetails?.merchantBusinessName }}
+            </div>
           </div>
         </div>
         <div class="payment-amount">
@@ -64,7 +66,7 @@
             QR code failed to load. Please try refreshing the page.
           </div>
           <div v-else class="qrcode">
-            <vue-qrcode :value="bankWebsiteUrl" tag="svg" :options="{
+            <vue-qrcode :value="paymentUrl" tag="svg" :options="{
               errorCorrectionLevel: 'Q',
               width: 250,
             }"></vue-qrcode>
@@ -86,7 +88,7 @@
 
 <script setup lang="ts">
 import storeImagePlaceholder from "@/assets/images/store_image_placeholder.svg";
-import { ref, onMounted, inject, onUnmounted, type Ref } from 'vue';
+import { ref, onMounted, inject, onUnmounted, type Ref, type ComputedRef } from 'vue';
 import type BankData from '@/core/types/BankData';
 import type PaymentDetails from '@/core/types/PaymentDetails';
 import { PaymentsService } from '@/core/services/PaymentsService';
@@ -102,6 +104,7 @@ const props = defineProps<{
 }>();
 
 const bankWebsiteUrl = ref('');
+const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 
 const emit = defineEmits<{
   (e: 'bankChange'): void;
@@ -111,11 +114,12 @@ const emit = defineEmits<{
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentRequestDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
+const paymentUrl = inject<string>('paymentUrl');
 const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
-const paymentsService = new PaymentsService();
 const pollInterval = ref<number | null>(null);
+const paymentsService = new PaymentsService();
 
 const getBankLogo = (bank: BankData | undefined) => {
   if (!bank) return '';
@@ -405,7 +409,13 @@ onUnmounted(() => {
   width: 100%;
 }
 
-.merchant-details {
+.merchant-details-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.merchant-details-column {
   display: flex;
   flex-direction: column;
   gap: 4px;

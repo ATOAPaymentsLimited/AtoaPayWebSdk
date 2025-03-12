@@ -7,8 +7,14 @@
       <div class="success-title">Payment successful</div>
     </div>
 
+    <div v-if="isMobileWidth && !showSuccessAnimation">
+      <PaymentMerchantDetails :amount="paymentDetails?.amount?.amount || 0"
+        :merchant-business-name="paymentDetails?.merchantBusinessName || ''"
+        :store-location-name="paymentDetails?.storeDetails?.locationName" :store-url="paymentDetails?.storeImg || ''" />
+    </div>
+
     <div v-show="!showSuccessAnimation" class="next-content slide-up">
-      <PaymentDetails :request-status-details="requestStatusDetails" />
+      <PaymentDetailsUI :request-status-details="requestStatusDetails" />
       <div v-show="showCountdown" class="redirect-message">
         You will be redirected in <strong>{{ countdown }}</strong> seconds
       </div>
@@ -17,9 +23,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject, onUnmounted } from 'vue';
-import PaymentDetails from '@/components/rightPane/paymentDetails/PaymentDetails.vue';
+import { ref, onMounted, inject, onUnmounted, type Ref, type ComputedRef } from 'vue';
+import PaymentDetailsUI from '@/components/rightPane/paymentDetails/PaymentDetailsUI.vue';
+import PaymentMerchantDetails from '@/components/rightPane/paymentDetails/PaymentMerchantDetails.vue';
 import { EnvironmentTypeEnum } from '@/core/types/Environment';
+import type PaymentDetails from '@/core/types/PaymentDetails';
 import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
 import { PaymentsService } from '@/core/services/PaymentsService';
 
@@ -28,7 +36,9 @@ const emit = defineEmits<{
 }>(); const showSuccessAnimation = ref(false);
 const paymentService = new PaymentsService();
 const requestStatusDetails = ref<PaymentRequestStatusDetails>();
+const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 const paymentRequestId = inject<string>('paymentRequestId');
+const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
 const pollInterval = ref<number | null>(null);
 const countdown = ref(5);
@@ -74,7 +84,13 @@ const startCountdown = () => {
     countdown.value--;
     if (countdown.value <= 0) {
       clearInterval(timer);
-      emit('success', { paymentIdempotencyId: requestStatusDetails.value?.transactionDetails?.[0]?.paymentIdempotencyId, status: requestStatusDetails.value?.status });
+      emit(
+        'success',
+        {
+          paymentIdempotencyId: requestStatusDetails.value?.transactionDetails?.[0]?.paymentIdempotencyId,
+          status: requestStatusDetails.value?.status
+        },
+      );
     }
   }, 1000);
 };
@@ -177,5 +193,13 @@ onUnmounted(() => {
   font-size: 28px;
   font-weight: 700;
   color: var(--base-black);
+}
+
+.redirect-message {
+  font-size: 14px;
+  height: 1.5;
+  color: var(--base-black);
+  margin-top: 20px;
+  width: 100%;
 }
 </style>

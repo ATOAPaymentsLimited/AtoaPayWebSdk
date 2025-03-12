@@ -116,12 +116,4 @@ defineProps({
   box-sizing: border-box;
   padding: 4px;
 }
-
-.redirect-message {
-  font-size: 14px;
-  height: 1.5;
-  color: var(--base-black);
-  margin-top: 8px;
-  width: 100%;
-}
 </style>
