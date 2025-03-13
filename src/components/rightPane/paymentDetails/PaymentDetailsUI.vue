@@ -32,7 +32,8 @@
 
   <div v-else class="status-section processing">
     <div class="status-icon">
-      <img src="@/assets/images/icon_processing.gif" alt="Payment Success" class="processing-icon" />
+      <img src="https://atoa-gifs.s3.eu-west-2.amazonaws.com/icon_processing.gif" alt="Payment Success"
+        class="processing-icon" />
     </div>
     <div class="status-info">
       <div class="status-title">Processing</div>

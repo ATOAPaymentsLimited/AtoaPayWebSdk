@@ -2,7 +2,7 @@
   <div class="payment-verification">
     <div class="logos">
       <img class="atoa-logo" src="@/assets/images/atoa_brand_logo.svg" alt="Atoa Logo" />
-      <img :src="explainerUiLoadingDots" class="loading-dots">
+      <img src="https://atoa-gifs.s3.eu-west-2.amazonaws.com/loading_dots.gif" class="loading-dots">
       <img v-if="bankLogo" :src="bankLogo" alt="Bank Logo" class="bank-logo" />
     </div>
 
@@ -21,7 +21,6 @@
 import { computed, onMounted } from 'vue';
 import type BankData from '@/core/types/BankData';
 import { getBankLogo } from '@/core/types/BankData';
-import explainerUiLoadingDots from '@/assets/images/loading_dots.gif';
 
 const props = defineProps<{
   selectedBank: BankData

@@ -57,7 +57,6 @@ const leftPaneStyle = computed(() => {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  background-image: url('@/assets/images/left-pane-bottom-right-shopping-bag.svg');
   background-position: 120% 105%;
   background-repeat: no-repeat;
   padding: 20px;

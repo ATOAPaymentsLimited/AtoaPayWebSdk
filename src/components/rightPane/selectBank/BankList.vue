@@ -1,9 +1,19 @@
 <template>
   <div class="bank-list-container">
-    <h2 class="section-title">ALL BANKS</h2>
+    <h2 class="section-title"> {{ !searchQuery ? 'ALL BANKS' : 'RESULTS' }} </h2>
     <div class="bank-list">
-      <BankCard v-for="bank in filteredBanks" :key="bank.id" :bank="bank" :is-selected="selectedBank?.id === bank.id"
-        @select="$emit('select', $event)" />
+      <TransitionGroup name="bank-list" tag="div" class="transition-container">
+        <div class="no-results-container" v-if="searchQuery && filteredBanks.length === 0">
+          <div class="no-results-title">
+            No results
+          </div>
+          <div class="no-results-message">
+            {{ `No results for "${searchQuery}" in banks. Try using different keywords.` }}
+          </div>
+        </div>
+        <BankCard v-else v-for="bank in filteredBanks" :key="bank.id" :bank="bank"
+          :is-selected="selectedBank?.id === bank.id" @select="$emit('select', $event)" />
+      </TransitionGroup>
     </div>
   </div>
 </template>
@@ -11,13 +21,13 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type BankData from '@/core/types/BankData';
-import BankCard from './BankCard.vue';
+import BankCard from '@/components/rightPane/selectBank/BankCard.vue';
 
 const props = defineProps<{
-  banks: BankData[]
-  searchQuery: string
+  banks: BankData[],
+  searchQuery: string,
   selectedType: 'personal' | 'business',
-  selectedBank?: BankData
+  selectedBank?: BankData,
 }>();
 
 defineEmits<{
@@ -39,8 +49,13 @@ const filteredBanks = computed(() => {
 
 <style scoped>
 .bank-list-container {
+  height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.transition-container {
+  height: 100%;
 }
 
 .section-title {
@@ -52,8 +67,29 @@ const filteredBanks = computed(() => {
 }
 
 .bank-list {
+  height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+.no-results-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.no-results-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--base-black);
+}
+
+.no-results-message {
+  font-size: 14px;
+  color: var(--grey-500);
 }
 
 :deep(.bank-card) {
@@ -62,5 +98,20 @@ const filteredBanks = computed(() => {
 
 :deep(.bank-card:last-child) {
   margin-bottom: 0;
+}
+
+.bank-list-move,
+.bank-list-enter-active,
+.bank-list-leave-active {
+  transition: all 0.3s ease;
+}
+
+.bank-list-enter-from,
+.bank-list-leave-to {
+  opacity: 0;
+}
+
+.bank-list-leave-active {
+  position: absolute;
 }
 </style>

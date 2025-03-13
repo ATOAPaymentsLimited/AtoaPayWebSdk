@@ -1,5 +1,9 @@
 <template>
   <script type="application/javascript" defer src="qrcode.vue.browser.min.js"></script>
+  <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/animated_grid.gif">
+  <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/loading_dots.gif">
+  <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/icon_processing.gif">
+  <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/payment_success.gif">
   <div class="sdk-dialog-container" ref="dialogContainer">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
       <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId"

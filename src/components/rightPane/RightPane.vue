@@ -52,7 +52,7 @@
               <ExplainerUI v-on:continue="setCurrentView('View2')" :is-loading="isFetchingInitialData" />
             </div>
 
-            <div v-else-if="currentView === 'View2'">
+            <div v-else-if="currentView === 'View2'" class="view-container-flex">
               <SelectBank v-on:select-bank="handleOnBankSelect" :selected-bank-id="selectedBank?.id" />
             </div>
 

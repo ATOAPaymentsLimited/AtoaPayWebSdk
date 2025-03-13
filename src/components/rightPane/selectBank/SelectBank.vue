@@ -4,21 +4,31 @@
       <div class="search-input">
         <img :src="searchIcon" alt="Search" class="search-icon">
         <input type="text" v-model="searchQuery" :placeholder="`Search your ${selectedType} bank`">
+        <img v-if="searchQuery" src="@/assets/images/icon_close.svg" alt="Clear" class="clear-icon"
+          @click="searchQuery = ''">
       </div>
     </div>
 
     <div class="content" v-if="isLoading">
       <div class="loading-state">
-        <img :src="animatedGrid" alt="Loading" class="loading-animation">
+        <img src="https://atoa-gifs.s3.eu-west-2.amazonaws.com/animated_grid.gif" alt="Loading"
+          class="loading-animation">
         <p class="loading-text">Fetching banks</p>
+      </div>
+    </div>
+
+    <div class="content" v-else-if="banksListFetchError">
+      <div class="error-state">
+        <p class="error-title">Oops! Something went wrong</p>
+        <p class="error-message">An unknown error occurred. We track these errors automatically, Please try again.</p>
+        <button class="retry-button" @click="fetchBanksList">Retry</button>
       </div>
     </div>
 
     <div class="content" v-else>
       <BankTabs v-model="selectedType" />
-
       <div class="banks-container">
-        <PopularBanks :banks="banks" :selected-bank="selectedBank" @select="handleBankSelect" />
+        <PopularBanks v-if="!searchQuery" :banks="banks" :selected-bank="selectedBank" @select="handleBankSelect" />
         <BankList :banks="banks" :search-query="searchQuery" :selected-type="selectedType" :selected-bank="selectedBank"
           @select="handleBankSelect" />
       </div>
@@ -28,7 +38,6 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import animatedGrid from '@/assets/images/animated_grid.gif';
 import searchIcon from '@/assets/images/icon_search.svg';
 import { PaymentsService } from '@/core/services/PaymentsService';
 import type BankData from '@/core/types/BankData';
@@ -48,10 +57,12 @@ const props = defineProps({
 });
 
 const searchQuery = ref('');
-const isLoading = ref(true);
+const isLoading = ref(false);
 const banks = ref<BankData[]>([]);
 const selectedType = ref<'personal' | 'business'>('personal');
 const selectedBank = ref<BankData | undefined>();
+const banksListFetchError = ref(false);
+const paymentsService = new PaymentsService();
 
 const handleBankSelect = (bank: BankData) => {
   selectedBank.value = bank;
@@ -63,7 +74,7 @@ onMounted(() => {
 });
 
 async function fetchBanksList() {
-  const paymentsService = new PaymentsService();
+  isLoading.value = true;
 
   try {
     banks.value = await paymentsService.fetchConsumerBankInstitutions();
@@ -77,6 +88,7 @@ async function fetchBanksList() {
     }
   } catch (error) {
     console.error('Failed to fetch banks:', error);
+    banksListFetchError.value = true;
   } finally {
     isLoading.value = false;
   }
@@ -84,6 +96,11 @@ async function fetchBanksList() {
 </script>
 
 <style scoped>
+* {
+  margin: 0px;
+  padding: 0px;
+}
+
 .select-bank {
   padding: 24px 0;
   padding-right: 24px;
@@ -138,6 +155,18 @@ async function fetchBanksList() {
   font-size: 20px;
 }
 
+.clear-icon {
+  cursor: pointer;
+  width: 12px;
+  height: 16px;
+  opacity: 0.6;
+  object-fit: contain;
+}
+
+.clear-icon:hover {
+  opacity: 1;
+}
+
 .search-input input {
   border: none;
   background: none;
@@ -156,6 +185,7 @@ async function fetchBanksList() {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: center;
 }
 
 .loading-state {
@@ -197,5 +227,46 @@ async function fetchBanksList() {
   .select-bank {
     padding-right: 0px;
   }
+}
+
+.error-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+}
+
+.error-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--base-black);
+  margin: 0;
+}
+
+.error-message {
+  font-size: 14px;
+  color: var(--grey-500);
+  margin: 12px 0px;
+}
+
+.retry-button {
+  font-family: inherit;
+  background: none;
+  border: none;
+  color: var(--primary-500);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 8px 16px;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-underline-offset: 8px;
+}
+
+.retry-button:hover {
+  opacity: 0.8;
 }
 </style>

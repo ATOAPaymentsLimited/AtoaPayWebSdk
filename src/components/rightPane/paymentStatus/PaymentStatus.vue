@@ -2,7 +2,8 @@
   <div class="payment-status">
     <div v-show="showSuccessAnimation" class="success-content fade-out">
       <div class="success-animation">
-        <img src="@/assets/images/payment_success.gif" alt="Payment Success" class="success-gif" />
+        <img src="https://atoa-gifs.s3.eu-west-2.amazonaws.com/payment_success.gif" alt="Payment Success"
+          class="success-gif" />
       </div>
       <div class="success-title">Payment successful</div>
     </div>
