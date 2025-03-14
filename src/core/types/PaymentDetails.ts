@@ -16,6 +16,11 @@ export interface PaymentDetailsError {
   paymentDetailsErrorRedirectionUrl: string | null;
 }
 
+export interface TipOption {
+  value: number;
+  mostTipped: boolean;
+}
+
 export default interface PaymentDetails {
   merchantBusinessName: string;
   merchantId: string;
@@ -48,6 +53,13 @@ export default interface PaymentDetails {
   allowSdkRetry?: boolean;
   options?: {
     [key: string]: string | boolean | number | undefined;
+  };
+  tipInfo?: {
+    id: string;
+    tipType: 0 | 1;
+    allowCustomTips: boolean;
+    tipOptions: Array<TipOption>;
+    status: boolean;
   };
   splitBill?: boolean;
   splitOutstandingAmount?: number;

@@ -10,33 +10,17 @@
           </div>
           <div class="spacer" :style="{
             width: isMobileWidth
-              ? currentView === 'View2'
+              ? currentView === ViewType.SelectBankView
                 ? '15vw'
-                : currentView === 'View4'
+                : currentView === ViewType.PaymentInProgressView
                   ? '20vw'
                   : '25vw'
               : '0px',
           }"></div>
           <div v-if="!isFetchingInitialData" :key="currentView" class="sdk-right-pane-header-text">
-            <div v-if="currentView === 'View1'">
-              <h2>Continue to your bank</h2>
-            </div>
-
-            <div v-else-if="currentView === 'View2'">
-              <h2>Select your bank to continue</h2>
-            </div>
-
-            <div v-else-if="currentView === 'View3'">
-              <h2>Scan to pay</h2>
-            </div>
-
-            <div v-else-if="currentView === 'View4'">
-              <h2>Payment in progress</h2>
-            </div>
-
-            <div v-else-if="currentView === 'View5'">
-              <p class="payment-details-header">Payment details</p>
-              <p class="payment-timestamp">{{ formattedTimestamp }}</p>
+            <div>
+              <h2>{{ viewTitleMap[currentView].title }}</h2>
+              <p v-if="viewTitleMap[currentView].showTimestamp" class="payment-timestamp">{{ formattedTimestamp }}</p>
             </div>
           </div>
         </div>
@@ -48,26 +32,24 @@
       <div class="view-content">
         <Transition mode="out-in" name="fade-slide" @enter="enter" @leave="leave">
           <div :key="currentView" class="view">
-            <div v-if="currentView === 'View1'" class="view-container-flex">
-              <ExplainerUI v-on:continue="setCurrentView('View2')" :is-loading="isFetchingInitialData" />
+            <div v-if="currentView === ViewType.ExplainerView" class="view-container-flex">
+              <ExplainerUI v-on:continue="goToNextView" :is-loading="isFetchingInitialData" />
             </div>
 
-            <div v-else-if="currentView === 'View2'" class="view-container-flex">
+            <div v-else-if="currentView === ViewType.SelectBankView" class="view-container-flex">
               <SelectBank v-on:select-bank="handleOnBankSelect" :selected-bank-id="selectedBank?.id" />
             </div>
 
-            <div v-else-if="currentView === 'View3'">
+            <div v-else-if="currentView === ViewType.PaymentOptionsView">
               <PaymentOptions v-if="selectedBank && paymentDetails" :selected-bank="selectedBank"
-                :payment-details="paymentDetails" @bank-change="setCurrentView('View2')"
-                @status-change="setCurrentView('View4')" />
+                :payment-details="paymentDetails" @bank-change="goToPreviousView" @status-change="goToNextView" />
             </div>
 
-            <div v-else-if="currentView === 'View4'" class="view-container-flex">
-              <PaymentVerification v-if="selectedBank" :selected-bank="selectedBank"
-                @success="setCurrentView('View5')" />
+            <div v-else-if="currentView === ViewType.PaymentInProgressView" class="view-container-flex">
+              <PaymentVerification v-if="selectedBank" :selected-bank="selectedBank" @success="goToNextView" />
             </div>
 
-            <div v-else-if="currentView === 'View5'" class="view-container-flex">
+            <div v-else-if="currentView === ViewType.PaymentStatusView" class="view-container-flex">
               <PaymentStatus @success="(data) => emit('success', data)" />
             </div>
           </div>
@@ -89,6 +71,13 @@ import PaymentVerification from '@/components/rightPane/paymentVerification/Paym
 import PaymentStatus from '@/components/rightPane/paymentStatus/PaymentStatus.vue'
 import type PaymentDetails from '@/core/types/PaymentDetails'
 import CancellationDialog from '@/components/rightPane/CancellationDialog.vue'
+import { ViewType } from '@/core/types/ViewTypeEnum'
+
+// Add this type definition before the viewTitleMap
+type ViewConfig = {
+  title: string;
+  showTimestamp?: boolean;
+};
 
 const props = defineProps({
   isFetchingInitialData: {
@@ -102,25 +91,52 @@ const emit = defineEmits<{
   success: [data?: any],
 }>();
 
+const viewTitleMap: Record<ViewType, ViewConfig> = {
+  [ViewType.ExplainerView]: {
+    title: 'Continue to your bank',
+  },
+  [ViewType.SelectBankView]: {
+    title: 'Select your bank to continue',
+  },
+  [ViewType.PaymentOptionsView]: {
+    title: 'Scan to pay',
+  },
+  [ViewType.PaymentInProgressView]: {
+    title: 'Payment in progress',
+  },
+  [ViewType.PaymentStatusView]: {
+    title: 'Payment details',
+    showTimestamp: true
+  }
+} as const;
+
 const { isFetchingInitialData } = toRefs(props);
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 
-const views = ['View1', 'View2', 'View3', 'View4', 'View5'] as const
-type ViewType = typeof views[number]
-
-const currentView = ref<ViewType>('View1')
+const views = ViewType.values();
+const currentView = ref<ViewType>(ViewType.ExplainerView)
 const selectedBank = ref<BankData | null>();
 
 const showBackButton = computed(
-  () => currentView.value === "View3" || currentView.value === "View4"
+  () => currentView.value === ViewType.PaymentOptionsView || currentView.value === ViewType.PaymentInProgressView
 );
 
 const goToPreviousView = () => {
   const currentIndex = views.indexOf(currentView.value);
-  const previousView = views[currentIndex - 1];
-  setCurrentView(previousView);
+  if (currentIndex < views.length - 1) {
+    const previousView = views[currentIndex - 1];
+    setCurrentView(previousView);
+  }
+};
+
+const goToNextView = () => {
+  const currentIndex = views.indexOf(currentView.value);
+  if (currentIndex < views.length - 1) {
+    const nextView = views[currentIndex + 1];
+    setCurrentView(nextView);
+  }
 };
 
 const setCurrentView = (view: ViewType) => {
@@ -156,7 +172,7 @@ const leave = (el: Element, done: () => void) => {
 
 const handleOnBankSelect = (bank: BankData) => {
   selectedBank.value = bank;
-  setCurrentView('View3');
+  setCurrentView(ViewType.PaymentOptionsView);
 };
 
 const showCancellationDialog = ref(false);
