@@ -35,13 +35,17 @@
     "watch": "npm run watch:dev",
     "watch:dev": "vue-tsc -b && vite build --mode development --watch",
     "watch:uat": "vue-tsc -b && vite build --mode uat --watch",
-    "watch:prod": "vue-tsc -b && vite build --mode production --watch"
+    "watch:prod": "vue-tsc -b && vite build --mode production --watch",
+    "clean": "rm -rf dist",
+    "gzipper": "gzipper compress ./dist --include cjs,cts,js,ts,d.ts",
+    "prepublishOnly": "npm run clean && npm run build:prod && npm run gzipper"
   },
   "devDependencies": {
     "@chenfengyuan/vue-qrcode": "^2.0.0",
     "@types/node": "^22.13.8",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
+    "gzipper": "^7.2.0",
     "qrcode": "^1.5.4",
     "rollup-plugin-visualizer": "^5.14.0",
     "typescript": "~5.7.2",
