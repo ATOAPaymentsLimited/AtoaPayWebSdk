@@ -1,4 +1,4 @@
-export const baseURL = "https://devapi.atoa.me/api";
+const baseURL = import.meta.env.VITE_BASE_URL;
 
 export const api_urls = {
   GET_PAYMENT_DETAILS: `${baseURL}/payments/get-payment-details`,

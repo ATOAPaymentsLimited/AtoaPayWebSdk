@@ -5,12 +5,16 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev-host": "vite --host 0.0.0.0",
-    "build": "vue-tsc -b && vite build",
+    "build": "npm run build:dev && npm run build:uat && npm run build:prod",
+    "build:dev": "vue-tsc -b && vite build --mode development",
+    "build:uat": "vue-tsc -b && vite build --mode uat",
+    "build:prod": "vue-tsc -b && vite build --mode production",
     "preview": "vite preview",
     "serve-example": "vite example",
-    "serve-http": "npx http-server . -o /example/index.html",
-    "watch": "vue-tsc -b && vite build --watch"
+    "watch": "npm run watch:dev",
+    "watch:dev": "vue-tsc -b && vite build --mode development --watch",
+    "watch:uat": "vue-tsc -b && vite build --mode uat --watch",
+    "watch:prod": "vue-tsc -b && vite build --mode production --watch"
   },
   "devDependencies": {
     "@chenfengyuan/vue-qrcode": "^2.0.0",

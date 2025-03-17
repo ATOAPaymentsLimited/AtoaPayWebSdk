@@ -1,5 +1,5 @@
-import { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
 import { defineCustomElement, type ComponentPublicInstance } from "vue";
+import { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
 import AtoaPayClientSdk from "@/dialog.vue";
 
 const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk, {
