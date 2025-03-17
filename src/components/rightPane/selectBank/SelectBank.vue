@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { inject, onMounted, ref } from 'vue';
 import searchIcon from '@/assets/images/icon_search.svg';
 import { PaymentsService } from '@/core/services/PaymentsService';
 import type BankData from '@/core/types/BankData';
@@ -63,6 +63,7 @@ const selectedType = ref<'personal' | 'business'>('personal');
 const selectedBank = ref<BankData | undefined>();
 const banksListFetchError = ref(false);
 const paymentsService = new PaymentsService();
+const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
 
 const handleBankSelect = (bank: BankData) => {
   selectedBank.value = bank;
@@ -87,7 +88,9 @@ async function fetchBanksList() {
       }
     }
   } catch (error) {
-    console.error('Failed to fetch banks:', error);
+    if (errorHandler) {
+      errorHandler(Error(`Failed to fetch banks: ${error}`), 'PaymentDialog');
+    }
     banksListFetchError.value = true;
   } finally {
     isLoading.value = false;

@@ -1,8 +1,29 @@
 {
-  "name": "atoa-pay-sdk",
+  "name": "@atoapayments/atoa-web-client-sdk",
   "private": true,
   "version": "0.0.1",
   "type": "module",
+  "description": "Official web client SDK for integrating Atoa Payments into web applications",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ATOAPaymentsLimited/AtoaPayWebSdk"
+  },
+  "bugs": {
+    "url": "https://github.com/ATOAPaymentsLimited/AtoaPayWebSdk/issues",
+    "email": "vamsi@paywithatoa.co.uk"
+  },
+  "homepage": "https://github.com/ATOAPaymentsLimited/AtoaPayWebSdk#readme",
+  "keywords": [
+    "atoa pay",
+    "client",
+    "sdk"
+  ],
+  "author": "Yash Tiwari",
+  "license": "MIT",
+  "main": "dist/atoa-web-client-sdk.es.js",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "npm run build:dev && npm run build:uat && npm run build:prod",

@@ -19,7 +19,7 @@ export default defineConfig({
       entry: path.resolve(__dirname, "src/index.ts"),
       formats: ["es"],
       name: "AtoaPayWebSdk",
-      fileName: (format) => `atoa-web-sdk.${format}.js`,
+      fileName: (format) => `atoa-web-client-sdk.${format}.js`,
     },
     rollupOptions: {
       external: [], // If you want to bundle Vue, don't list it as external

@@ -183,6 +183,11 @@
           const sdk = new AtoaWebSdk({
             environment,
           });
+
+          sdk.onError((error) => {
+            window.alert(`Error in Atoa Web SDK: ${error.message}`);
+          });
+
           sdk
             .showDialog({
               paymentRequestId,

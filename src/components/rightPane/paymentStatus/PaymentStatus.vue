@@ -41,6 +41,7 @@ const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
+const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
 const pollInterval = ref<number | null>(null);
 const countdown = ref(5);
 const showCountdown = ref(false);
@@ -76,7 +77,9 @@ const pollPaymentStatus = async () => {
       }
     }
   } catch (error) {
-    console.error('Error polling payment status:', error);
+    if (errorHandler) {
+      errorHandler(Error(`Error while polling payment status:: ${error}`), 'PaymentDialog');
+    }
   }
 };
 

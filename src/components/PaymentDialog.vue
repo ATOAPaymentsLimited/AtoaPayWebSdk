@@ -26,6 +26,7 @@ const paymentAmount = ref(0);
 const storeImageUrl = ref("");
 const merchantBusinessName = ref("");
 const environment = inject<EnvironmentTypeEnum>('environment');
+const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
 
 const props = defineProps({
   paymentRequestId: {
@@ -70,7 +71,9 @@ async function fetchPaymentRequestDetails() {
     merchantBusinessName.value =
       paymentRequestResponseData.merchantBusinessName;
   } catch (error) {
-    console.error('Failed to fetch payment details:', error);
+    if (errorHandler) {
+      errorHandler(Error(`Failed to fetch payment details: ${error}`), 'PaymentDialog');
+    }
   } finally {
     isFetchingInitialData.value = false;
   }
@@ -84,7 +87,9 @@ async function fetchBanksList() {
     const banksResponseData: BankData[] = await paymentsService.fetchConsumerBankInstitutions();
     banksList.value = banksResponseData;
   } catch (error) {
-    console.error('Failed to fetch banks:', error);
+    if (errorHandler) {
+      errorHandler(Error(`Failed to fetch banks: ${error}`), 'PaymentDialog');
+    }
   } finally {
     isFetchingInitialData.value = false;
   }

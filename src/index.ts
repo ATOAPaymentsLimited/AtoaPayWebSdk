@@ -1,40 +1,21 @@
-import { defineCustomElement, type ComponentPublicInstance } from "vue";
+import { defineCustomElement } from "vue";
 import { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
 import AtoaPayClientSdk from "@/dialog.vue";
 
-const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk, {
-  configureApp(app) {
-    app.config.errorHandler = (
-      error: unknown,
-      instance: ComponentPublicInstance | null,
-      info: string
-    ) => {
-      const errorDetails = {
-        error: error,
-        componentName: instance?.$options?.name || "Dialog",
-        errorInfo: info,
-        componentData: instance
-          ? JSON.stringify(instance.$data, null, 2)
-          : null,
-        props: instance ? JSON.stringify(instance.$props, null, 2) : null,
-        timestamp: new Date().toISOString(),
-      };
-
-      console.error("[Atoa Payment SDK Error]:", errorDetails);
-    };
-  },
-});
+const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk);
 
 interface DialogOptions {
   paymentRequestId: string;
   paymentUrl: string;
 }
 
+type ErrorEventHandler = (error: { message: string; details?: any }) => void;
+
 customElements.define("atoa-pay-sdk-dialog", AtoaPaySdkDialogElement);
 
 export class AtoaWebSdk {
   private eventListeners: Map<string, Function[]>;
-  private dialogElement: HTMLElement | null;
+  private dialogElement: null | HTMLElement;
   private providedEnvironment: EnvironmentTypeEnum | undefined;
 
   constructor(config?: { environment?: EnvironmentTypeEnum }) {
@@ -47,23 +28,16 @@ export class AtoaWebSdk {
    * Initialize the SDK with configuration
    * @param {Object} config - Configuration object
    * @returns {AtoaWebSdk} - The SDK instance for chaining
+   * @throws {Error} If configuration is invalid
    */
   _init(config?: { environment?: EnvironmentTypeEnum }) {
-    try {
-      if (config !== undefined) {
-        this.validateConfig(config);
-      }
-
-      this.providedEnvironment = config?.environment;
-
-      return this;
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      console.error("[SDK] Initialization failed:", errorMessage);
-      this._emit("init", { success: false, error: errorMessage });
-      throw error;
+    if (config !== undefined) {
+      this.validateConfig(config);
     }
+
+    this.providedEnvironment = config?.environment;
+
+    return this;
   }
 
   /**
@@ -73,7 +47,7 @@ export class AtoaWebSdk {
    */
   validateConfig(config: { environment?: any } | null) {
     if (typeof config !== "object" || config === null) {
-      throw new Error("[Atoa Pay SDK] Configuration must be an object");
+      throw new Error("[Atoa Web SDK] Configuration must be an object");
     }
 
     const allowedEnvironments = Object.values(EnvironmentTypeEnum);
@@ -83,7 +57,7 @@ export class AtoaWebSdk {
       !allowedEnvironments.includes(config.environment)
     ) {
       throw new Error(
-        `[Atoa Pay SDK] Invalid environment. Must be one of: ${allowedEnvironments.join(
+        `[Atoa Web SDK] Invalid environment. Must be one of: ${allowedEnvironments.join(
           ", "
         )}`
       );
@@ -97,50 +71,64 @@ export class AtoaWebSdk {
    */
   showDialog(options: DialogOptions) {
     return new Promise((resolve) => {
-      this.dialogElement = document.createElement("atoa-pay-sdk-dialog");
+      try {
+        this.dialogElement = document.createElement("atoa-pay-sdk-dialog");
 
-      Object.assign(this.dialogElement, {
-        paymentRequestId: options.paymentRequestId,
-        environment: this.providedEnvironment,
-        paymentUrl: options.paymentUrl,
-      });
-
-      this.dialogElement.addEventListener("success", (event: Event) => {
-        const customEvent = event as CustomEvent;
-        this._removeDialog();
-        resolve({
-          data: customEvent.detail,
+        Object.assign(this.dialogElement, {
+          paymentRequestId: options.paymentRequestId,
+          environment: this.providedEnvironment,
+          paymentUrl: options.paymentUrl,
         });
-      });
 
-      this.dialogElement.addEventListener("close", (event: Event) => {
-        const customEvent = event as CustomEvent;
-        this._removeDialog();
-        resolve({
-          status: "cancelled",
-          data: customEvent.detail,
+        this.dialogElement.addEventListener("error", (event: Event) => {
+          const customEvent = event as CustomEvent;
+          this._emit("error", customEvent.detail);
         });
-      });
 
-      document.body.appendChild(this.dialogElement);
+        this.dialogElement.addEventListener("success", (event: Event) => {
+          const customEvent = event as CustomEvent;
+          this.removeDialog();
+          resolve({
+            data: customEvent.detail,
+          });
+        });
+
+        this.dialogElement.addEventListener("close", (event: Event) => {
+          const customEvent = event as CustomEvent;
+          this.removeDialog();
+          resolve({
+            status: "cancelled",
+            data: customEvent.detail,
+          });
+        });
+
+        document.body.appendChild(this.dialogElement);
+      } catch (error) {
+        this._emit("error", {
+          message:
+            error instanceof Error ? error.message : "Error showing dialog",
+          details: error,
+        });
+        resolve({ status: "error", error });
+      }
     });
   }
 
-  _removeDialog() {
+  removeDialog() {
     if (this.dialogElement) {
       document.body.removeChild(this.dialogElement);
       this.dialogElement = null;
     }
   }
 
-  _emit(
-    event: string,
-    data: {
-      success: boolean;
-      config?: { environment?: string };
-      error?: string;
+  onError(callback: ErrorEventHandler) {
+    if (!this.eventListeners.has("error")) {
+      this.eventListeners.set("error", []);
     }
-  ) {
+    this.eventListeners.get("error")?.push(callback);
+  }
+
+  _emit(event: string, data: any) {
     const listeners = this.eventListeners.get(event);
 
     if (listeners) {
@@ -148,9 +136,23 @@ export class AtoaWebSdk {
         try {
           callback(data);
         } catch (error) {
-          console.error(`[SDK] Error in "${event}" event listener:`, error);
+          console.error(
+            `[Atoa Web SDK] Error in "${event}" event listener:`,
+            error
+          );
         }
       });
     }
+  }
+
+  /**
+   * Cleans up resources used by the SDK
+   * Removes dialog element, clears event listeners, and resets instance properties
+   */
+  dispose() {
+    this.removeDialog();
+    this.eventListeners.clear();
+    this.providedEnvironment = undefined;
+    this.dialogElement = null;
   }
 }

@@ -1,5 +1,6 @@
 <template>
   <script type="application/javascript" defer src="qrcode.vue.browser.min.js"></script>
+
   <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/animated_grid.gif"
     fetchpriority="high" type="image/gif">
   <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/loading_dots.gif"
@@ -8,6 +9,7 @@
     fetchpriority="high" type="image/gif">
   <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/payment_success.gif"
     fetchpriority="high" type="image/gif">
+
   <div class="sdk-dialog-container" ref="dialogContainer">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
       <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId"
@@ -33,19 +35,29 @@ const props = defineProps<{
 provide('environment', props.environment);
 provide('paymentUrl', props.paymentUrl);
 
-onErrorCaptured((error, instance, info) => {
+const handleError = (error: Error, componentName: string): void => {
   const errorDetails = {
     message: error.message,
-    stack: error.stack,
-    componentName: instance?.$options?.name || 'Dialog',
-    errorInfo: info,
-    componentData: instance ? JSON.stringify(instance.$data, null, 2) : null,
-    props: instance ? JSON.stringify(instance.$props, null, 2) : null,
-    timestamp: new Date().toISOString()
+    details: {
+      componentName: componentName || 'Unknown',
+      timestamp: new Date().toISOString()
+    }
   };
 
-  console.error('[Atoa Payment SDK Error]:', errorDetails);
+  if (dialogContainer.value) {
+    const event = new CustomEvent('error', {
+      detail: errorDetails,
+      bubbles: true,
+      composed: true
+    });
+    dialogContainer.value.dispatchEvent(event);
+  }
+};
 
+provide('errorHandler', handleError);
+
+onErrorCaptured((error, instance) => {
+  handleError(error, instance?.$options?.name || 'Dialog');
   // Return false to prevent error from propagating
   return false;
 });
@@ -98,14 +110,6 @@ function handleClose(data: any) {
   align-items: center;
   justify-content: center;
   z-index: 9999;
-}
-
-.padding-xl {
-  padding: 20px;
-}
-
-.padding-huge {
-  padding: 24px;
 }
 
 .lds-space-500-y {

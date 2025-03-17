@@ -46,7 +46,7 @@
 
 <script setup lang="ts">
 import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
-import type { PropType } from 'vue';
+import { inject, type PropType } from 'vue';
 
 defineProps({
   requestStatusDetails: {
@@ -55,13 +55,17 @@ defineProps({
   },
 });
 
+const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
+
 const copyToClipboard = async (text?: string) => {
   if (!text) return;
 
   try {
     await navigator.clipboard.writeText(text);
-  } catch (err) {
-    console.error('Failed to copy text:', err);
+  } catch (error) {
+    if (errorHandler) {
+      errorHandler(Error(`Failed to copy text: ${error}`), 'PaymentDialog');
+    }
   }
 };
 </script>
