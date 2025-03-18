@@ -1,12 +1,17 @@
 <template>
-  <div class="bank-card" :class="{ disabled: !bank.enabled }" @click="handleClick">
+  <div class="bank-card" @click="handleClick">
     <div class="bank-logo">
       <img :src="bankLogo" :alt="bank.name" class="logo-image">
     </div>
     <div class="bank-info">
-      <span class="bank-name">{{ bank.name }}</span>
+      <div class="bank-name-row">
+        <span class="bank-name">{{ bank.name }}</span>
+        <div class="warning-icon" v-if="!bank.enabled">
+          <img src="@/assets/images/icon_warning.svg" alt="Warning" class="warning-image">
+        </div>
+      </div>
     </div>
-    <div class="radio-checkbox" :class="{ selected: isSelected }" v-if="bank.enabled">
+    <div class="radio-checkbox" :class="{ selected: isSelected }">
       <img v-if="isSelected" src="@/assets/images/black_check.svg" alt="Selected" class="checkmark">
     </div>
   </div>
@@ -22,7 +27,8 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'select', bank: BankData): void
+  (e: 'select', bank: BankData): void;
+  (e: 'showOverlay', bank: BankData): void;
 }>();
 
 const bankLogo = computed(() => {
@@ -33,6 +39,9 @@ const bankLogo = computed(() => {
 const handleClick = () => {
   if (props.bank.enabled) {
     emit('select', props.bank);
+  } else {
+    // Emit event to show overlay in parent component
+    emit('showOverlay', props.bank);
   }
 };
 </script>
@@ -48,15 +57,6 @@ const handleClick = () => {
   border-radius: 8px;
 }
 
-.bank-card:hover:not(.disabled) {
-  background: var(--grey-50);
-}
-
-.bank-card.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .bank-logo {
   width: 32px;
   height: 32px;
@@ -69,8 +69,8 @@ const handleClick = () => {
 }
 
 .logo-image {
-  max-width: 100%;
-  max-height: 100%;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 
@@ -78,10 +78,29 @@ const handleClick = () => {
   flex: 1;
 }
 
+.bank-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .bank-name {
   font-size: 14px;
   font-weight: 500;
   color: var(--grey-600);
+}
+
+.warning-icon {
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+  background-color: var(--error-subtle);
+  border-radius: 16px;
+}
+
+.warning-image {
+  width: 16px;
+  height: 16px;
 }
 
 .radio-checkbox {
@@ -106,5 +125,10 @@ const handleClick = () => {
 .checkmark {
   width: 100%;
   height: 100%;
+}
+
+.bank-card.disabled {
+  opacity: 0.8;
+  cursor: pointer;
 }
 </style>

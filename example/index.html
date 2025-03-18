@@ -146,6 +146,11 @@
             placeholder="Payment Request ID"
           />
           <input type="text" id="payment-url" placeholder="Payment URL" />
+          <input
+            type="text"
+            id="cancellation-callback-url"
+            placeholder="Cancellation Callback URL (optional)"
+          />
         </div>
         <button id="atoa-pay-button">Pay using Atoa</button>
       </div>
@@ -170,7 +175,7 @@
     </div>
 
     <script type="module">
-      import { AtoaWebSdk } from "../dist/atoa-web-sdk.es.js";
+      import { AtoaWebSdk } from "../dist/atoa-web-client-sdk.es.js";
 
       document
         .getElementById("atoa-pay-button")
@@ -179,13 +184,16 @@
           const paymentRequestId =
             document.getElementById("payment-request-id").value;
           const paymentUrl = document.getElementById("payment-url").value;
+          const cancellationCallbackUrl = document.getElementById(
+            "cancellation-callback-url"
+          ).value;
 
           const sdk = new AtoaWebSdk({
             environment,
-          });
-
-          sdk.onError((error) => {
-            window.alert(`Error in Atoa Web SDK: ${error.message}`);
+            cancellationCallbackUrl,
+            onError: (error) => {
+              window.alert(`Error in Atoa Web SDK: ${error.message}`);
+            },
           });
 
           sdk

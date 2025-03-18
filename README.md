@@ -25,6 +25,7 @@ import { AtoaWebSdk } from "@atoapayments/atoa-web-client-sdk";
 // Initialize the SDK with environment
 const sdk = new AtoaWebSdk({
   environment: "PRODUCTION", // 'SANDBOX' for testing
+  cancellationCallbackUrl: "https://your-api.example.com/payment/cancelled", // Optional
 });
 
 // Handle errors
@@ -55,6 +56,7 @@ sdk
 
   const sdk = new AtoaWebSdk({
     environment: "PRODUCTION",
+    cancellationCallbackUrl: "https://your-api.example.com/payment/cancelled",
   });
 
   document.getElementById("payment-button").addEventListener("click", () => {
@@ -82,6 +84,7 @@ new AtoaWebSdk(config);
 
 - `config` (optional): Configuration object
   - `environment`: The Atoa environment to use (enum: 'SANDBOX', 'PRODUCTION')
+  - `cancellationCallbackUrl`: URL to notify when payment is cancelled (optional)
 
 ### Methods
 

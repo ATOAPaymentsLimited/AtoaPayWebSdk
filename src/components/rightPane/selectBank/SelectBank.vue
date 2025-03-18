@@ -30,7 +30,7 @@
       <div class="banks-container">
         <PopularBanks v-if="!searchQuery" :banks="banks" :selected-bank="selectedBank" @select="handleBankSelect" />
         <BankList :banks="banks" :search-query="searchQuery" :selected-type="selectedType" :selected-bank="selectedBank"
-          @select="handleBankSelect" />
+          @select="handleBankSelect" @show-overlay="(bankData) => emit('showOverlay', bankData)" />
       </div>
     </div>
   </div>
@@ -46,7 +46,8 @@ import PopularBanks from '@/components/rightPane/selectBank/PopularBanks.vue';
 import BankList from '@/components/rightPane/selectBank/BankList.vue';
 
 const emit = defineEmits<{
-  (e: 'selectBank', bank: BankData): void
+  (e: 'selectBank', bank: BankData): void,
+  (e: 'showOverlay', bank: BankData): void
 }>();
 
 const props = defineProps({

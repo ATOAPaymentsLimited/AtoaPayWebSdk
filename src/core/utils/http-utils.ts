@@ -2,7 +2,7 @@ const baseURL = import.meta.env.VITE_BASE_URL;
 
 export const api_urls = {
   GET_PAYMENT_DETAILS: `${baseURL}/payments/get-payment-details`,
-  GET_BANK_INSTITUTIONS: `${baseURL}/institutions/customer`,
+  GET_BANK_INSTITUTIONS: `${baseURL}/institutions/customer?sendDisabledBanks=true`,
   SECURE_PAYMENT_AUTH: `${baseURL}/payments/v1/secure-payment-auth`,
   GET_PAYMENT_STATUS: `${baseURL}/payments/v1/payment-status/$id`,
 };

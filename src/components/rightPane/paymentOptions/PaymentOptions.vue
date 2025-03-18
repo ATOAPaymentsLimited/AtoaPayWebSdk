@@ -42,46 +42,60 @@
       <button class="change-button" @click="$emit('bankChange')">Change</button>
     </div>
 
-    <div v-if="isMobile()" class="mobile-footer-section">
-      <button class="go-to-bank-button" @click="handleGoToBankButtonClick">
-        Go to {{ selectedBank.name }}
-      </button>
-      <div class="powered-by">
-        Powered by <img src="@/assets/images/atoa_logo.svg" alt="AtoA" class="atoa-small-logo" />
+    <div v-if="fetchAuthorisationError" class="authorisation-error-container">
+      <div class="error-icon">
+        <img src="@/assets/images/icon_warning.svg" alt="Warning" class="error-warning-image">
+        <p>Downtime</p>
       </div>
-      <div class="atoa-terms">
-        <a href="https://paywithatoa.co.uk/terms/" class="footer-link">Atoa's terms</a> and
-        <a href="https://paywithatoa.co.uk/atoa-business-privacy-policy/" class="footer-link">privacy policy</a>.
+      <div class="error-message">
+        <p><strong>{{ selectedBank?.name }}</strong> bank is currently down for maintenance. Please select a
+          different bank and try
+          again.</p>
       </div>
+      <button class="error-overlay-btn" @click="$emit('bankChange')">Select different bank</button>
     </div>
-    <div class="desktop-footer-section">
-      <div class="qr-section">
-        <p class="qr-instructions-bold">Scan with your phone camera</p>
-        <p class="qr-instructions">to confirm in your bank app.</p>
-        <div class="qr-container">
-          <div v-if="isLoading" class="qr-code-placeholder">
-            <div class="loading-spinner"></div>
-          </div>
-          <div v-else-if="qrLoadError" class="qr-error">
-            QR code failed to load. Please try refreshing the page.
-          </div>
-          <div v-else class="qrcode">
-            <vue-qrcode :value="paymentUrl" tag="svg" :options="{
-              errorCorrectionLevel: 'Q',
-              width: 250,
-            }"></vue-qrcode>
-            <img class="qrcode-mask-image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
-          </div>
+    <div v-else>
+      <div v-if="isMobile()" class="mobile-footer-section">
+        <button class="go-to-bank-button" @click="handleGoToBankButtonClick">
+          Go to {{ selectedBank.name }}
+        </button>
+        <div class="powered-by">
+          Powered by <img src="@/assets/images/atoa_logo.svg" alt="AtoA" class="atoa-small-logo" />
+        </div>
+        <div class="atoa-terms">
+          <a href="https://paywithatoa.co.uk/terms/" class="footer-link">Atoa's terms</a> and
+          <a href="https://paywithatoa.co.uk/atoa-business-privacy-policy/" class="footer-link">privacy policy</a>.
         </div>
       </div>
+      <div v-else class="desktop-footer-section">
+        <div class="qr-section">
+          <p class="qr-instructions-bold">Scan with your phone camera</p>
+          <p class="qr-instructions">to confirm in your bank app.</p>
+          <div class="qr-container">
+            <div v-if="isLoading" class="qr-code-placeholder">
+              <div class="loading-spinner"></div>
+            </div>
+            <div v-else-if="qrLoadError" class="qr-error">
+              QR code failed to load. Please try refreshing the page.
+            </div>
+            <div v-else class="qrcode">
+              <vue-qrcode :value="paymentUrl" tag="svg" :options="{
+                errorCorrectionLevel: 'Q',
+                width: 250,
+              }"></vue-qrcode>
+              <img class="qrcode-mask-image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
+            </div>
+          </div>
+        </div>
 
-      <div class="divider">
-        <span>Or</span>
+        <div class="divider">
+          <span>Or</span>
+        </div>
+
+        <a :href="bankWebsiteUrl" target="_blank" class="bank-website-link">
+          Go to your bank website
+        </a>
       </div>
-
-      <a :href="bankWebsiteUrl" target="_blank" class="bank-website-link">
-        Go to your bank website
-      </a>
     </div>
   </div>
 </template>
@@ -120,6 +134,7 @@ const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
 const pollInterval = ref<number | null>(null);
+const fetchAuthorisationError = ref<string | null>(null);
 const paymentsService = new PaymentsService();
 
 const getBankLogo = (bank: BankData | undefined) => {
@@ -151,10 +166,11 @@ const fetchAuthorisationData = async () => {
     const authResponseData = await paymentsService.callBankAuthorisationUrl(paymentRequestId, props.paymentDetails, props.selectedBank);
     paymentAuthResponse.value = authResponseData;
     bankWebsiteUrl.value = authResponseData?.authorisationUrl;
-  } catch (error) {
+  } catch (error: unknown) {
     if (errorHandler) {
       errorHandler(Error(`Failed to fetch authorisation URL: ${error}`), 'PaymentDialog');
     }
+    fetchAuthorisationError.value = error instanceof Error ? error.message : String(error);
   } finally {
     isLoading.value = false;
   }
@@ -193,6 +209,7 @@ onUnmounted(() => {
 
 <style scoped>
 .payment-options {
+  height: 100%;
   padding: 24px 0;
   display: flex;
   flex-direction: column;
@@ -509,5 +526,66 @@ onUnmounted(() => {
 .atoa-small-logo {
   height: 12px;
   filter: invert(49%) sepia(17%) saturate(486%) hue-rotate(163deg) brightness(95%) contrast(89%);
+}
+
+.authorisation-error-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.error-icon {
+  background-color: var(--error-subtle);
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  gap: 6px;
+  width: fit-content;
+}
+
+.error-icon p {
+  margin: 0px;
+  padding: 0px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--error-default);
+}
+
+.error-warning-image {
+  width: 24px;
+  height: 24px;
+}
+
+.error-message p {
+  margin: 0px;
+  font-size: 16px;
+  color: var(--base-black);
+  margin-bottom: 24px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.error-overlay-btn {
+  width: 100%;
+  background-color: var(--grey-50);
+  color: var(--base-black);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 0px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.error-overlay-btn:hover {
+  background-color: var(--grey-100);
 }
 </style>

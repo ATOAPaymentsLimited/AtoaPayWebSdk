@@ -1,12 +1,14 @@
 import { defineCustomElement } from "vue";
 import { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
 import AtoaPayClientSdk from "@/dialog.vue";
+import axios, { AxiosError } from "axios";
 
 const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk);
 
 interface DialogOptions {
   paymentRequestId: string;
   paymentUrl: string;
+  cancellationCallbackUrl?: string;
 }
 
 type ErrorEventHandler = (error: { message: string; details?: any }) => void;
@@ -17,8 +19,12 @@ export class AtoaWebSdk {
   private eventListeners: Map<string, Function[]>;
   private dialogElement: null | HTMLElement;
   private providedEnvironment: EnvironmentTypeEnum | undefined;
+  private cancellationCallbackUrl: string | undefined;
 
-  constructor(config?: { environment?: EnvironmentTypeEnum }) {
+  constructor(config?: {
+    environment?: EnvironmentTypeEnum;
+    onError?: ErrorEventHandler;
+  }) {
     this.eventListeners = new Map();
     this.dialogElement = null;
     this._init(config);
@@ -30,12 +36,27 @@ export class AtoaWebSdk {
    * @returns {AtoaWebSdk} - The SDK instance for chaining
    * @throws {Error} If configuration is invalid
    */
-  _init(config?: { environment?: EnvironmentTypeEnum }) {
+  _init(config?: {
+    environment?: EnvironmentTypeEnum;
+    cancellationCallbackUrl?: string;
+    onError?: ErrorEventHandler;
+  }) {
     if (config !== undefined) {
       this.validateConfig(config);
     }
 
     this.providedEnvironment = config?.environment;
+    this.cancellationCallbackUrl = config?.cancellationCallbackUrl;
+
+    // Initialize error listeners map
+    if (!this.eventListeners.has("error")) {
+      this.eventListeners.set("error", []);
+    }
+
+    // Add error callback if provided
+    if (config?.onError) {
+      this.eventListeners.get("error")?.push(config.onError);
+    }
 
     return this;
   }
@@ -95,6 +116,25 @@ export class AtoaWebSdk {
 
         this.dialogElement.addEventListener("close", (event: Event) => {
           const customEvent = event as CustomEvent;
+
+          const callbackUrl = this.cancellationCallbackUrl;
+
+          if (callbackUrl) {
+            axios
+              .get(callbackUrl, {
+                params: {
+                  status: "cancelled",
+                  paymentRequestId: options.paymentRequestId,
+                },
+              })
+              .catch((error: AxiosError) => {
+                this._emit("error", {
+                  message: "[Atoa Web SDK] Failed to notify cancellation",
+                  details: error,
+                });
+              });
+          }
+
           this.removeDialog();
           resolve({
             status: "cancelled",
@@ -119,13 +159,6 @@ export class AtoaWebSdk {
       document.body.removeChild(this.dialogElement);
       this.dialogElement = null;
     }
-  }
-
-  onError(callback: ErrorEventHandler) {
-    if (!this.eventListeners.has("error")) {
-      this.eventListeners.set("error", []);
-    }
-    this.eventListeners.get("error")?.push(callback);
   }
 
   _emit(event: string, data: any) {

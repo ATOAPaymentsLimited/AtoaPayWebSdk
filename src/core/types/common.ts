@@ -45,21 +45,6 @@ export enum BankTypeEnum {
   BUSINESS = "Business Banks",
 }
 
-const instance = import.meta.env.VITE_INSTANCE;
-
-export const bankListEnviromentEnum: { [key: string]: string } = {
-  PRODUCTION: instance ? `bankListProd-${instance}` : "bankListProd",
-  UAT: instance ? `bankListUat-${instance}` : "bankListUat",
-  SANDBOX: instance ? `bankListDev-${instance}` : "bankListDev",
-};
-
-export enum SplitOptionsEnum {
-  SPLIT_EQUALLY = "SPLIT_EQUALLY",
-  CUSTOM_AMOUNT = "CUSTOM_AMOUNT",
-  PAY_SPLIT_CUSTOM = "PAY_SPLIT_CUSTOM",
-  PAY_FULL_AMOUNT = "PAY_FULL_AMOUNT",
-}
-
 export enum TermsTypeEnum {
   YAPILY_END_USER_TERMS = "YAPILY_END_USER_TERMS",
   YAPILY_PRIVACY_POLICY = "YAPILY_PRIVACY_POLICY",

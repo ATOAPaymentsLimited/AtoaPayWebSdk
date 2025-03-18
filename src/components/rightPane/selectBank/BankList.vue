@@ -12,7 +12,8 @@
           </div>
         </div>
         <BankCard v-else v-for="bank in filteredBanks" :key="bank.id" :bank="bank"
-          :is-selected="selectedBank?.id === bank.id" @select="$emit('select', $event)" />
+          :is-selected="selectedBank?.id === bank.id" @select="$emit('select', $event)"
+          @show-overlay="(bankData) => emit('showOverlay', bankData)" />
       </TransitionGroup>
     </div>
   </div>
@@ -30,8 +31,9 @@ const props = defineProps<{
   selectedBank?: BankData,
 }>();
 
-defineEmits<{
-  (e: 'select', bank: BankData): void
+const emit = defineEmits<{
+  (e: 'select', bank: BankData): void,
+  (e: 'showOverlay', bank: BankData): void
 }>();
 
 const filteredBanks = computed(() => {

@@ -91,8 +91,8 @@ const handleBankSelect = (bank: BankData) => {
 }
 
 .logo-image {
-  max-width: 24px;
-  max-height: 24px;
+  max-width: 28px;
+  max-height: 28px;
   object-fit: contain;
 }
 

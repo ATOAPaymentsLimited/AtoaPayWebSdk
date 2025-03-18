@@ -19,14 +19,20 @@
           }"></div>
           <div v-if="!isFetchingInitialData" :key="currentView" class="sdk-right-pane-header-text">
             <div>
-              <h2>{{ viewTitleMap[currentView].title }}</h2>
+              <h2 v-if="currentView !== ViewType.PaymentStatusView">{{ viewTitleMap[currentView].title }}</h2>
+              <p v-else class="payment-details-header">{{ viewTitleMap[currentView].title }}</p>
               <p v-if="viewTitleMap[currentView].showTimestamp" class="payment-timestamp">{{ formattedTimestamp }}</p>
             </div>
           </div>
         </div>
-        <button class="sdk-action-button" @click="handleClose">
-          <img src="@/assets/images/icon_close.svg" alt="Close" />
-        </button>
+        <div class="sdk-action-row">
+          <button v-if="currentView === ViewType.SelectBankView" class="sdk-action-button" @click="handleHelpAction">
+            <img src="@/assets/images/icon_help.svg" alt="Help" />
+          </button>
+          <button class="sdk-action-button" @click="handleClose">
+            <img src="@/assets/images/icon_close.svg" alt="Close" />
+          </button>
+        </div>
       </div>
 
       <div class="view-content">
@@ -37,10 +43,11 @@
             </div>
 
             <div v-else-if="currentView === ViewType.SelectBankView" class="view-container-flex">
-              <SelectBank v-on:select-bank="handleOnBankSelect" :selected-bank-id="selectedBank?.id" />
+              <SelectBank v-on:select-bank="handleOnBankSelect" :selected-bank-id="selectedBank?.id"
+                @show-overlay="handleShowOverlay" />
             </div>
 
-            <div v-else-if="currentView === ViewType.PaymentOptionsView">
+            <div v-else-if="currentView === ViewType.PaymentOptionsView" class="view-container-flex">
               <PaymentOptions v-if="selectedBank && paymentDetails" :selected-bank="selectedBank"
                 :payment-details="paymentDetails" @bank-change="goToPreviousView" @status-change="goToNextView" />
             </div>
@@ -55,6 +62,22 @@
           </div>
         </Transition>
       </div>
+
+      <div v-if="showDisabledBankOverlay" class="bank-overlay">
+        <div class="overlay-content">
+          <div class="overlay-icon">
+            <img src="@/assets/images/icon_warning.svg" alt="Warning" class="overlay-warning-image">
+            <p>Downtime</p>
+          </div>
+          <div class="overlay-message">
+            <p><strong>{{ disabledBank?.name }}</strong> bank is currently down for maintenance. Please select a
+              different bank and try
+              again.</p>
+          </div>
+          <button class="close-overlay-btn" @click.stop="closeOverlay">Select different bank</button>
+        </div>
+      </div>
+
       <CancellationDialog :show="showCancellationDialog" @dismiss="showCancellationDialog = false"
         @confirm="confirmClose" />
     </div>
@@ -93,7 +116,7 @@ const emit = defineEmits<{
 
 const viewTitleMap: Record<ViewType, ViewConfig> = {
   [ViewType.ExplainerView]: {
-    title: 'Continue to your bank',
+    title: 'How to pay with bank app?',
   },
   [ViewType.SelectBankView]: {
     title: 'Select your bank to continue',
@@ -116,8 +139,10 @@ const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 
 const views = ViewType.values();
-const currentView = ref<ViewType>(ViewType.ExplainerView)
+const currentView = ref<ViewType>(ViewType.SelectBankView)
 const selectedBank = ref<BankData | null>();
+const showDisabledBankOverlay = ref(false);
+const disabledBank = ref<BankData | null>(null);
 
 const showBackButton = computed(
   () => currentView.value === ViewType.PaymentOptionsView || currentView.value === ViewType.PaymentInProgressView
@@ -181,6 +206,10 @@ const handleClose = () => {
   showCancellationDialog.value = true;
 };
 
+const handleHelpAction = () => {
+  setCurrentView(ViewType.ExplainerView);
+}
+
 const confirmClose = () => {
   showCancellationDialog.value = false;
   emit('close', { paymentRequestId: paymentRequestId });
@@ -197,17 +226,27 @@ const formattedTimestamp = computed(() => {
     minute: '2-digit',
     hour12: true
   };
-  const time = date.toLocaleTimeString('en-US', timeOptions);
+  const time = date.toLocaleTimeString('en-GB', timeOptions);
 
   const dateOptions: Intl.DateTimeFormatOptions = {
     day: 'numeric',
     month: 'short',
     year: 'numeric'
   };
-  const dateStr = date.toLocaleDateString('en-US', dateOptions);
+  const dateStr = date.toLocaleDateString('en-GB', dateOptions);
 
   return `${time} on ${dateStr}`;
 });
+
+const handleShowOverlay = (bank: BankData) => {
+  disabledBank.value = bank;
+  showDisabledBankOverlay.value = true;
+};
+
+const closeOverlay = () => {
+  showDisabledBankOverlay.value = false;
+  disabledBank.value = null;
+};
 </script>
 
 <style scoped>
@@ -334,10 +373,11 @@ const formattedTimestamp = computed(() => {
 }
 
 .payment-details-header {
+  margin: 0px;
   font-size: 14px;
   font-weight: 500;
   color: var(--grey-500);
-  margin-bottom: 8px;
+  margin-bottom: 2px;
 }
 
 .payment-timestamp {
@@ -376,5 +416,83 @@ const formattedTimestamp = computed(() => {
 
 .spacer-hidden {
   display: none;
+}
+
+.sdk-action-row {
+  display: flex;
+}
+
+.bank-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.overlay-content {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  max-width: 90%;
+  width: 400px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.overlay-icon {
+  background-color: var(--error-subtle);
+  border-radius: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 8px 12px;
+  gap: 6px;
+}
+
+.overlay-icon p {
+  margin: 0px;
+  padding: 0px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--error-default);
+}
+
+.overlay-warning-image {
+  width: 24px;
+  height: 24px;
+}
+
+.overlay-message p {
+  margin: 0px;
+  font-size: 16px;
+  color: var(--base-black);
+  margin-bottom: 24px;
+}
+
+.close-overlay-btn {
+  width: 100%;
+  background-color: var(--grey-50);
+  color: var(--base-black);
+  border: none;
+  border-radius: 10px;
+  padding: 14px 0px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.close-overlay-btn:hover {
+  background-color: var(--grey-100);
 }
 </style>
