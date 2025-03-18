@@ -91,3 +91,6 @@ lerna-debug.log
 Thumbs.db
 
 package-lock.json
+
+# Roolup visualizer stats file
+stats.html

@@ -102,7 +102,7 @@
 
 <script setup lang="ts">
 import storeImagePlaceholder from "@/assets/images/store_image_placeholder.svg";
-import { ref, onMounted, inject, onUnmounted, type Ref, type ComputedRef } from 'vue';
+import { ref, onMounted, inject, type Ref, type ComputedRef, onBeforeUnmount } from 'vue';
 import type BankData from '@/core/types/BankData';
 import type PaymentDetails from '@/core/types/PaymentDetails';
 import { PaymentsService } from '@/core/services/PaymentsService';
@@ -201,7 +201,7 @@ onMounted(() => {
   pollInterval.value = setInterval(checkPaymentStatus, 1000);
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (pollInterval.value) {
     clearInterval(pollInterval.value);
   }

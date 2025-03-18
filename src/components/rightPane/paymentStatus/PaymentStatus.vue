@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, inject, onUnmounted, type Ref, type ComputedRef } from 'vue';
+import { ref, onMounted, inject, type Ref, type ComputedRef, onBeforeUnmount } from 'vue';
 import PaymentDetailsUI from '@/components/rightPane/paymentDetails/PaymentDetailsUI.vue';
 import PaymentMerchantDetails from '@/components/rightPane/paymentDetails/PaymentMerchantDetails.vue';
 import { EnvironmentTypeEnum } from '@/core/types/Environment';
@@ -104,7 +104,7 @@ onMounted(() => {
   pollInterval.value = setInterval(pollPaymentStatus, 3000);
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   if (pollInterval.value) {
     clearInterval(pollInterval.value);
   }

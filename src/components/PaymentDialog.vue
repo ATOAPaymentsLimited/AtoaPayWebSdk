@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, provide, computed, onUnmounted, inject } from 'vue';
+import { onMounted, ref, provide, computed, inject, onBeforeUnmount } from 'vue';
 import LeftPane from '@/components/leftPane/LeftPane.vue';
 import RightPane from "@/components/rightPane/RightPane.vue";
 import type PaymentDetails from '@/core/types/PaymentDetails';
@@ -103,7 +103,7 @@ onMounted(() => {
   window.addEventListener('resize', handleResize);
 });
 
-onUnmounted(() => {
+onBeforeUnmount(() => {
   window.removeEventListener('resize', handleResize);
 });
 </script>
