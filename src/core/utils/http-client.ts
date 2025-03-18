@@ -87,7 +87,7 @@ export class ApiClient {
         method: fetchMethod,
         body: fetchBody,
         signal: signal,
-        credentials: "include",
+        mode: "cors",
       });
 
       const fetchResponse = await window.fetch(fetchRequeset);
