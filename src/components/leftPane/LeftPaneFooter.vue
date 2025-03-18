@@ -1,0 +1,58 @@
+<template>
+  <div class="left-pane-footer">
+    <div class="payment-dialog-badges">
+      <RoundedChip text="Powered by" :rightImage="atoaLogo" />
+      <RoundedChip text="FCA Authorised" :leftImage="atoaShieldIcon" backgroundColor="var(--positive-subtle)"
+        color="var(--positive-deep)" />
+      <RoundedChip text="Secure" :leftImage="atoaLockIcon" backgroundColor="var(--positive-subtle)"
+        color="var(--positive-deep)" />
+    </div>
+    <div class="footer-help-section">
+      <div class="footer-help-text">By continuing, you agreed to Atoa's <a href="https://paywithatoa.co.uk/terms/"
+          class="footer-link">terms</a> and <a href="https://paywithatoa.co.uk/atoa-business-privacy-policy/"
+          class="footer-link">privacy policy</a>.</div>
+      <div class="footer-help-text">Issues with your payment? <a
+          href="https://help.paywithatoa.co.uk/hc/atoa-help-center/en" class="footer-link-underline">Get help now.</a>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import RoundedChip from "@/components/sharedComponents/RoundedChip.vue";
+import atoaLogo from "@/assets/images/atoa_logo.svg";
+import atoaShieldIcon from "@/assets/images/icon_check_shield.svg";
+import atoaLockIcon from "@/assets/images/icon_lock.svg";
+</script>
+
+<style scoped>
+.payment-dialog-badges {
+  display: flex;
+  gap: 8px;
+  justify-content: left;
+}
+
+.footer-help-section {
+  margin-top: 20px;
+}
+
+.footer-link {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.footer-link-underline {
+  color: inherit;
+  text-decoration: underline dotted;
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.footer-help-text {
+  color: var(--base-white);
+  font-size: 11px;
+  margin-top: 4px;
+}
+</style>
