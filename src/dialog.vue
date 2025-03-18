@@ -40,7 +40,7 @@ const handleError = (error: Error, componentName: string): void => {
     message: error.message,
     details: {
       componentName: componentName || 'Unknown',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toUTCString()
     }
   };
 

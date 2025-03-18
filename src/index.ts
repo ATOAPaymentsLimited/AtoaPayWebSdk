@@ -22,7 +22,7 @@ export class AtoaWebSdk {
   private cancellationCallbackUrl: string | undefined;
 
   constructor(config?: {
-    environment?: EnvironmentTypeEnum;
+    environment: EnvironmentTypeEnum;
     onError?: ErrorEventHandler;
   }) {
     this.eventListeners = new Map();
@@ -37,7 +37,7 @@ export class AtoaWebSdk {
    * @throws {Error} If configuration is invalid
    */
   _init(config?: {
-    environment?: EnvironmentTypeEnum;
+    environment: EnvironmentTypeEnum;
     cancellationCallbackUrl?: string;
     onError?: ErrorEventHandler;
   }) {
@@ -48,12 +48,10 @@ export class AtoaWebSdk {
     this.providedEnvironment = config?.environment;
     this.cancellationCallbackUrl = config?.cancellationCallbackUrl;
 
-    // Initialize error listeners map
     if (!this.eventListeners.has("error")) {
       this.eventListeners.set("error", []);
     }
 
-    // Add error callback if provided
     if (config?.onError) {
       this.eventListeners.get("error")?.push(config.onError);
     }

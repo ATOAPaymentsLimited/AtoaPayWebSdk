@@ -182,7 +182,7 @@ const checkPaymentStatus = async () => {
     // TODO: Confirm this logic
     const requestStatusData = await paymentsService.getPaymentStatusByID(
       paymentRequestId || "",
-      { env: environment || EnvironmentTypeEnum.SANDBOX }
+      { env: environment || EnvironmentTypeEnum.PRODUCTION }
     );
 
     if (!['PAYMENT_NOT_INITIATED', 'AWAITING_AUTHORIZATION'].includes(requestStatusData.status)) {

@@ -5,20 +5,6 @@
       <div>Payment details</div>
     </div>
 
-    <!-- TODO: Confirm this with New Consumer Web flow -->
-    <!-- <div class="debited-section">
-      <div class="debited-from-text">Debited from</div>
-      <div class="bank-details">
-        <div class="bank-logo">
-          <img src="@/assets/images/atoa_brand_logo.svg" alt="Lloyds Bank" />
-        </div>
-        <div class="bank-info">
-          <div class="bank-name">Lloyds</div>
-          <div class="account-number">XXXXXX047</div>
-        </div>
-      </div>
-    </div> -->
-
     <div class="reference-section">
       <div class="reference-row">
         <div class="value-container">

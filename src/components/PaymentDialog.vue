@@ -59,7 +59,7 @@ async function fetchPaymentRequestDetails() {
   try {
     const paymentsService = new PaymentsService();
     const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(props.paymentRequestId,
-      { env: environment || EnvironmentTypeEnum.SANDBOX },
+      { env: environment || EnvironmentTypeEnum.PRODUCTION },
     );
     paymentRequestDetails.value = paymentRequestResponseData;
     paymentAmount.value = paymentRequestResponseData.amount.amount;

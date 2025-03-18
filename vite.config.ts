@@ -9,7 +9,7 @@ export default defineConfig({
       customElement: true,
     }),
     visualizer({
-      open: false,
+      open: true,
       gzipSize: true,
       brotliSize: true,
     }),
@@ -19,7 +19,10 @@ export default defineConfig({
       entry: path.resolve(__dirname, "src/index.ts"),
       formats: ["es"],
       name: "AtoaPayWebSdk",
-      fileName: (format) => `atoa-web-client-sdk.${format}.js`,
+      fileName: (format) => {
+        const env = process.env.VITE_ENV || "dev";
+        return `atoa-web-client-sdk-${env}.${format}.js`;
+      },
     },
     rollupOptions: {
       external: [], // If you want to bundle Vue, don't list it as external

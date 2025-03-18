@@ -26,11 +26,10 @@ import { AtoaWebSdk } from "@atoapayments/atoa-web-client-sdk";
 const sdk = new AtoaWebSdk({
   environment: "PRODUCTION", // 'SANDBOX' for testing
   cancellationCallbackUrl: "https://your-api.example.com/payment/cancelled", // Optional
-});
-
-// Handle errors
-sdk.onError((error) => {
-  console.error("Atoa SDK Error:", error.message);
+  onError: (error) => {
+    // Optional
+    console.error("Atoa SDK Error:", error.message);
+  },
 });
 
 // Show payment dialog
@@ -85,6 +84,7 @@ new AtoaWebSdk(config);
 - `config` (optional): Configuration object
   - `environment`: The Atoa environment to use (enum: 'SANDBOX', 'PRODUCTION')
   - `cancellationCallbackUrl`: URL to notify when payment is cancelled (optional)
+  - `onError`: Error callback function (optional) - alternative to using the onError method
 
 ### Methods
 
@@ -111,16 +111,6 @@ sdk.showDialog({
   - On success: `{ data: {...paymentData} }`
   - On cancellation: `{ status: 'cancelled', data: {...} }`
   - On error: `{ status: 'error', error: {...} }`
-
-#### onError(callback)
-
-Registers an error event handler.
-
-```javascript
-sdk.onError((error) => {
-  console.error("Atoa SDK Error:", error.message, error.details);
-});
-```
 
 **Parameters:**
 
