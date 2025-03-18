@@ -162,6 +162,7 @@ const handleGoToBankButtonClick = () => {
 
 const fetchAuthorisationData = async () => {
   try {
+    fetchAuthorisationError.value = null;
     isLoading.value = true;
     const authResponseData = await paymentsService.callBankAuthorisationUrl(paymentRequestId, props.paymentDetails, props.selectedBank);
     paymentAuthResponse.value = authResponseData;

@@ -77,6 +77,7 @@ onMounted(() => {
 
 async function fetchBanksList() {
   isLoading.value = true;
+  banksListFetchError.value = false;
 
   try {
     banks.value = await paymentsService.fetchConsumerBankInstitutions();
