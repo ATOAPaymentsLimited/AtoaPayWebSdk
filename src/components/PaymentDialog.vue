@@ -87,9 +87,6 @@ async function fetchBanksList() {
     const banksResponseData: BankData[] = await paymentsService.fetchConsumerBankInstitutions();
     banksList.value = banksResponseData;
   } catch (error) {
-    if (errorHandler) {
-      errorHandler(Error(`Failed to fetch banks: ${error}`), 'PaymentDialog');
-    }
   } finally {
     isFetchingInitialData.value = false;
   }

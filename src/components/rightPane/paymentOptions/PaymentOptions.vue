@@ -129,7 +129,6 @@ const paymentRequestId = inject<string>('paymentRequestId');
 const paymentRequestDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
 const paymentUrl = inject<string>('paymentUrl');
-const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
 const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
@@ -168,9 +167,6 @@ const fetchAuthorisationData = async () => {
     paymentAuthResponse.value = authResponseData;
     bankWebsiteUrl.value = authResponseData?.authorisationUrl;
   } catch (error: unknown) {
-    if (errorHandler) {
-      errorHandler(Error(`Failed to fetch authorisation URL: ${error}`), 'PaymentDialog');
-    }
     fetchAuthorisationError.value = error instanceof Error ? error.message : String(error);
   } finally {
     isLoading.value = false;
@@ -190,9 +186,6 @@ const checkPaymentStatus = async () => {
       emit('statusChange', requestStatusData);
     }
   } catch (error) {
-    if (errorHandler) {
-      errorHandler(Error(`Failed to check payment status: ${error}`), 'PaymentDialog');
-    }
   }
 };
 

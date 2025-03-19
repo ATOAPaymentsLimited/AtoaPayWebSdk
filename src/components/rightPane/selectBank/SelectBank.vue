@@ -64,7 +64,6 @@ const selectedType = ref<'personal' | 'business'>('personal');
 const selectedBank = ref<BankData | undefined>();
 const banksListFetchError = ref(false);
 const paymentsService = new PaymentsService();
-const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
 
 const handleBankSelect = (bank: BankData) => {
   selectedBank.value = bank;
@@ -90,9 +89,6 @@ async function fetchBanksList() {
       }
     }
   } catch (error) {
-    if (errorHandler) {
-      errorHandler(Error(`Failed to fetch banks: ${error}`), 'PaymentDialog');
-    }
     banksListFetchError.value = true;
   } finally {
     isLoading.value = false;
