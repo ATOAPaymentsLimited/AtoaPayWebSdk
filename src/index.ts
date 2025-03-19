@@ -83,12 +83,39 @@ export class AtoaWebSdk {
     }
   }
 
+  validateDialogOptions(options: DialogOptions): boolean {
+    console.log(JSON.stringify(options));
+    if (
+      options.paymentRequestId === undefined ||
+      options.paymentRequestId === ""
+    ) {
+      this._emit("error", {
+        message: "[Atoa Web SDK] Payment Request Id is required",
+      });
+
+      return false;
+    }
+    if (options.paymentUrl === undefined || options.paymentUrl === "") {
+      this._emit("error", {
+        message: "[Atoa Web SDK] Payment URL is required",
+      });
+
+      return false;
+    }
+
+    return true;
+  }
+
   /**
    * Shows a dialog with the specified options
    * @param {Object} options - Dialog options
    * @returns {Promise} Resolves with true if confirmed, false if cancelled
    */
   showDialog(options: DialogOptions) {
+    const validationResult = this.validateDialogOptions(options);
+
+    if (validationResult === false) return;
+
     return new Promise((resolve) => {
       try {
         this.dialogElement = document.createElement("atoa-pay-sdk-dialog");

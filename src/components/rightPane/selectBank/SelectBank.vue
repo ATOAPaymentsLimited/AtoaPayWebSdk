@@ -37,7 +37,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import searchIcon from '@/assets/images/icon_search.svg';
 import { PaymentsService } from '@/core/services/PaymentsService';
 import type BankData from '@/core/types/BankData';

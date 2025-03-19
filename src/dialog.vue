@@ -35,12 +35,13 @@ const props = defineProps<{
 provide('environment', props.environment);
 provide('paymentUrl', props.paymentUrl);
 
-const handleError = (error: Error, componentName: string): void => {
+const handleError = (error: Error, componentName: string, name?: string): void => {
   const errorDetails = {
     message: error.message,
     details: {
       componentName: componentName || 'Unknown',
-      timestamp: new Date().toUTCString()
+      timestamp: new Date().toUTCString(),
+      name: name ?? error.name,
     }
   };
 
@@ -57,7 +58,7 @@ const handleError = (error: Error, componentName: string): void => {
 provide('errorHandler', handleError);
 
 onErrorCaptured((error, instance) => {
-  handleError(error, instance?.$options?.name || 'Dialog');
+  handleError(error, instance?.$options?.name || 'Dialog', 'SDK Error');
   // Return false to prevent error from propagating
   return false;
 });

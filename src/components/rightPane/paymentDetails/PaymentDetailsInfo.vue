@@ -41,7 +41,7 @@ defineProps({
   },
 });
 
-const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
+const errorHandler = inject<(error: Error, componentName: string, name?: string) => void>('errorHandler');
 
 const copyToClipboard = async (text?: string) => {
   if (!text) return;

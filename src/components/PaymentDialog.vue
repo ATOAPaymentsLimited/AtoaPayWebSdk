@@ -18,6 +18,7 @@ import type PaymentDetails from '@/core/types/PaymentDetails';
 import type BankData from '@/core/types/BankData';
 import { PaymentsService } from '@/core/services/PaymentsService';
 import { EnvironmentTypeEnum } from '@/core/types/Environment';
+import type { Failure } from '@/core/utils/http-utils';
 
 const isFetchingInitialData = ref(true);
 const paymentRequestDetails = ref<PaymentDetails>();
@@ -26,7 +27,7 @@ const paymentAmount = ref(0);
 const storeImageUrl = ref("");
 const merchantBusinessName = ref("");
 const environment = inject<EnvironmentTypeEnum>('environment');
-const errorHandler = inject<(error: Error, componentName: string) => void>('errorHandler');
+const errorHandler = inject<(error: Error, componentName: string, name?: string) => void>('errorHandler');
 
 const props = defineProps({
   paymentRequestId: {
@@ -72,7 +73,7 @@ async function fetchPaymentRequestDetails() {
       paymentRequestResponseData.merchantBusinessName;
   } catch (error) {
     if (errorHandler) {
-      errorHandler(Error(`Failed to fetch payment details: ${error}`), 'PaymentDialog');
+      errorHandler(Error(`Failed to fetch payment details`), 'PaymentDialog', (error as Failure).name);
     }
   } finally {
     isFetchingInitialData.value = false;
