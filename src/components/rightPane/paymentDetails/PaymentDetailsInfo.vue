@@ -31,7 +31,10 @@
 </template>
 
 <script setup lang="ts">
+import { AtoaPayWebSDKError } from '@/core/types/Error';
 import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
+import type { ErrorEventHandler } from '@/core/types/SdkOptions';
+import type { Failure } from '@/core/utils/http-utils';
 import { inject, type PropType } from 'vue';
 
 defineProps({
@@ -41,7 +44,7 @@ defineProps({
   },
 });
 
-const errorHandler = inject<(error: Error, componentName: string, name?: string) => void>('errorHandler');
+const errorHandler = inject<ErrorEventHandler>('errorHandler');
 
 const copyToClipboard = async (text?: string) => {
   if (!text) return;
@@ -50,7 +53,13 @@ const copyToClipboard = async (text?: string) => {
     await navigator.clipboard.writeText(text);
   } catch (error) {
     if (errorHandler) {
-      errorHandler(Error(`Failed to copy text: ${error}`), 'PaymentDialog');
+      errorHandler(new AtoaPayWebSDKError(
+        `Failed to copy text`,
+        {
+          componentName: 'PaymentDetailsInfo',
+          errorName: (error as Failure).name,
+        },
+      ));
     }
   }
 };

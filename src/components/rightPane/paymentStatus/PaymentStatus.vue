@@ -31,19 +31,21 @@ import { EnvironmentTypeEnum } from '@/core/types/Environment';
 import type PaymentDetails from '@/core/types/PaymentDetails';
 import type PaymentRequestStatusDetails from '@/core/types/PaymentRequestStatusDetails';
 import { PaymentsService } from '@/core/services/PaymentsService';
+import type { DialogCloseEventHandler, PaymentStatusEventHandler } from '@/core/types/SdkOptions';
 
-const emit = defineEmits<{
-  success: [data?: any],
-}>(); const showSuccessAnimation = ref(false);
+const showSuccessAnimation = ref(false);
 const paymentService = new PaymentsService();
 const requestStatusDetails = ref<PaymentRequestStatusDetails>();
 const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
+const closeHandler = inject<DialogCloseEventHandler>('closeHandler');
+const paymentStatusChangeHandler = inject<PaymentStatusEventHandler>('paymentStatusChangeHandler');
 const pollInterval = ref<number | null>(null);
 const countdown = ref(5);
 const showCountdown = ref(false);
+let previousStatus: string | null = null;
 
 const triggerSuccessView = () => {
   showSuccessAnimation.value = true;
@@ -62,6 +64,13 @@ const pollPaymentStatus = async () => {
     );
 
     requestStatusDetails.value = result;
+
+    if (previousStatus !== requestStatusDetails.value?.status && paymentStatusChangeHandler) {
+      paymentStatusChangeHandler({
+        status: requestStatusDetails.value?.status,
+      });
+      previousStatus = requestStatusDetails.value?.status;
+    }
 
     if (result.status === "COMPLETED") {
       triggerSuccessView();
@@ -84,13 +93,12 @@ const startCountdown = () => {
     countdown.value--;
     if (countdown.value <= 0) {
       clearInterval(timer);
-      emit(
-        'success',
-        {
-          paymentIdempotencyId: requestStatusDetails.value?.transactionDetails?.[0]?.paymentIdempotencyId,
-          status: requestStatusDetails.value?.status
-        },
-      );
+      if (closeHandler) {
+        closeHandler({
+          paymentIdempotencyId: requestStatusDetails.value?.transactionDetails?.[0]?.paymentIdempotencyId ?? '',
+          status: requestStatusDetails.value?.status ?? '',
+        });
+      }
     }
   }, 1000);
 };

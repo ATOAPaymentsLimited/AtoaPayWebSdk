@@ -57,7 +57,7 @@
             </div>
 
             <div v-else-if="currentView === ViewType.PaymentStatusView" class="view-container-flex">
-              <PaymentStatus @success="(data) => emit('success', data)" />
+              <PaymentStatus />
             </div>
           </div>
         </Transition>
@@ -95,6 +95,7 @@ import PaymentStatus from '@/components/rightPane/paymentStatus/PaymentStatus.vu
 import type PaymentDetails from '@/core/types/PaymentDetails'
 import CancellationDialog from '@/components/rightPane/CancellationDialog.vue'
 import { ViewType } from '@/core/types/ViewTypeEnum'
+import type { UserCancelPaymentEventHandler } from '@/core/types/SdkOptions'
 
 // Add this type definition before the viewTitleMap
 type ViewConfig = {
@@ -108,11 +109,6 @@ const props = defineProps({
     required: false,
   },
 });
-
-const emit = defineEmits<{
-  close: [data?: any],
-  success: [data?: any],
-}>();
 
 const viewTitleMap: Record<ViewType, ViewConfig> = {
   [ViewType.ExplainerView]: {
@@ -137,6 +133,7 @@ const { isFetchingInitialData } = toRefs(props);
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
+const cancelPaymentHandler = inject<UserCancelPaymentEventHandler>('cancelPaymentHandler');
 
 const views = ViewType.values();
 const currentView = ref<ViewType>(ViewType.SelectBankView)
@@ -212,7 +209,9 @@ const handleHelpAction = () => {
 
 const confirmClose = () => {
   showCancellationDialog.value = false;
-  emit('close', { paymentRequestId: paymentRequestId });
+  if (cancelPaymentHandler) {
+    cancelPaymentHandler(paymentRequestId ?? '');
+  }
 };
 
 // TODO: Update this value

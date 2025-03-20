@@ -3,8 +3,7 @@
     <div class="payment-dialog" role="dialog" aria-modal="true">
       <div class="content-row">
         <LeftPane v-if="!isMobileWidth" :is-loading="isFetchingInitialData" />
-        <RightPane :is-fetching-initial-data="isFetchingInitialData" @success="(data) => emit('success', data)"
-          @close="(data) => emit('close', data)" />
+        <RightPane :is-fetching-initial-data="isFetchingInitialData" />
       </div>
     </div>
   </div>
@@ -19,6 +18,8 @@ import type BankData from '@/core/types/BankData';
 import { PaymentsService } from '@/core/services/PaymentsService';
 import { EnvironmentTypeEnum } from '@/core/types/Environment';
 import type { Failure } from '@/core/utils/http-utils';
+import type { ErrorEventHandler } from '@/core/types/SdkOptions';
+import { AtoaPayWebSDKError } from '@/core/types/Error';
 
 const isFetchingInitialData = ref(true);
 const paymentRequestDetails = ref<PaymentDetails>();
@@ -27,25 +28,13 @@ const paymentAmount = ref(0);
 const storeImageUrl = ref("");
 const merchantBusinessName = ref("");
 const environment = inject<EnvironmentTypeEnum>('environment');
-const errorHandler = inject<(error: Error, componentName: string, name?: string) => void>('errorHandler');
-
-const props = defineProps({
-  paymentRequestId: {
-    type: String,
-    required: true,
-  },
-});
-
-const emit = defineEmits<{
-  close: [data?: any],
-  success: [data?: any],
-}>();
+const paymentRequestId = inject<string>('paymentRequestId');
+const errorHandler = inject<ErrorEventHandler>('errorHandler');
 
 const width = ref(window.innerWidth);
 const isMobileWidth = computed(() => width.value < 1023);
 
 provide("isMobileWidth", isMobileWidth);
-provide('paymentRequestId', props.paymentRequestId);
 provide('banksList', banksList);
 provide('paymentRequestDetails', paymentRequestDetails);
 
@@ -59,7 +48,7 @@ async function fetchPaymentRequestDetails() {
 
   try {
     const paymentsService = new PaymentsService();
-    const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(props.paymentRequestId,
+    const paymentRequestResponseData: PaymentDetails = await paymentsService.fetchPaymentDetails(paymentRequestId ?? '',
       { env: environment || EnvironmentTypeEnum.PRODUCTION },
     );
     paymentRequestDetails.value = paymentRequestResponseData;
@@ -73,7 +62,13 @@ async function fetchPaymentRequestDetails() {
       paymentRequestResponseData.merchantBusinessName;
   } catch (error) {
     if (errorHandler) {
-      errorHandler(Error(`Failed to fetch payment details`), 'PaymentDialog', (error as Failure).name);
+      errorHandler(new AtoaPayWebSDKError(
+        `Failed to fetch payment details`,
+        {
+          componentName: 'PaymentDialog',
+          errorName: (error as Failure).name,
+        },
+      ));
     }
   } finally {
     isFetchingInitialData.value = false;

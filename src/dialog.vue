@@ -12,53 +12,42 @@
 
   <div class="sdk-dialog-container" ref="dialogContainer">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
-      <PaymentDialog :environment="environment" :payment-request-id="paymentRequestId"
-        @success="(data) => emit('success', data)" @close="handleClose" />
+      <PaymentDialog />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import PaymentDialog from '@/components/PaymentDialog.vue';
 import { onErrorCaptured, onMounted, provide, ref } from 'vue';
+import PaymentDialog from '@/components/PaymentDialog.vue';
 import { sdkTheme } from "@/assets/colors/colors";
-import { EnvironmentTypeEnum } from '@/core/types/Environment';
+import type {
+  SdkOptions
+} from '@/core/types/SdkOptions';
+import { AtoaPayWebSDKError } from './core/types/Error';
 
 const dialogContainer = ref<HTMLElement | null>(null);
 
-const props = defineProps<{
-  paymentRequestId: string,
-  environment: EnvironmentTypeEnum,
-  paymentUrl: string,
-}>();
+const props = defineProps<SdkOptions>();
 
 provide('environment', props.environment);
-provide('paymentUrl', props.paymentUrl);
-
-const handleError = (error: Error, componentName: string, name?: string): void => {
-  const errorDetails = {
-    message: error.message,
-    details: {
-      componentName: componentName || 'Unknown',
-      timestamp: new Date().toUTCString(),
-      name: name ?? error.name,
-    }
-  };
-
-  if (dialogContainer.value) {
-    const event = new CustomEvent('error', {
-      detail: errorDetails,
-      bubbles: true,
-      composed: true
-    });
-    dialogContainer.value.dispatchEvent(event);
-  }
-};
-
-provide('errorHandler', handleError);
+provide('paymentRequestId', props.paymentRequestId);
+provide('errorHandler', props.onError);
+provide('paymentStatusChangeHandler', props.onPaymentStatusChange);
+provide('cancelPaymentHandler', props.onUserCancel);
+provide('closeHandler', props.onClose);
 
 onErrorCaptured((error, instance) => {
-  handleError(error, instance?.$options?.name || 'Dialog', 'SDK Error');
+  if (props.onError) {
+    props.onError(new AtoaPayWebSDKError(
+      error.message || String(error),
+      {
+        componentName: instance?.$options?.name || 'Dialog',
+        name: 'SDK Error'
+      }
+    ));
+  }
+
   // Return false to prevent error from propagating
   return false;
 });
@@ -80,22 +69,6 @@ onMounted(() => {
     document.documentElement.style.setProperty(`--${key}`, String(value));
   });
 });
-
-const emit = defineEmits<{
-  close: [data?: any],
-  success: [data?: any],
-}>();
-
-function handleClose(data: any) {
-  if (dialogContainer.value) {
-    const event = new CustomEvent('close', {
-      detail: data,
-      bubbles: true,
-      composed: true
-    });
-    dialogContainer.value.dispatchEvent(event);
-  }
-}
 </script>
 
 <style>

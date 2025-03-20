@@ -1,182 +1,105 @@
 import { defineCustomElement } from "vue";
 import { EnvironmentTypeEnum } from "@/core/types/Environment.ts";
 import AtoaPayClientSdk from "@/dialog.vue";
-import axios, { AxiosError } from "axios";
+import type { SdkOptions } from "@/core/types/SdkOptions";
+import { AtoaPayWebSDKError } from "@/core/types/Error";
 
 const AtoaPaySdkDialogElement = defineCustomElement(AtoaPayClientSdk);
-
-interface DialogOptions {
-  paymentRequestId: string;
-  paymentUrl: string;
-  cancellationCallbackUrl?: string;
-}
-
-type ErrorEventHandler = (error: { message: string; details?: any }) => void;
-
 customElements.define("atoa-pay-sdk-dialog", AtoaPaySdkDialogElement);
 
 export class AtoaWebSdk {
-  private eventListeners: Map<string, Function[]>;
-  private dialogElement: null | HTMLElement;
-  private providedEnvironment: EnvironmentTypeEnum | undefined;
-  private cancellationCallbackUrl: string | undefined;
+  private dialogElement: HTMLElement | null;
+  private providedSdkOptions?: SdkOptions | null;
 
-  constructor(config?: {
-    environment: EnvironmentTypeEnum;
-    onError?: ErrorEventHandler;
-  }) {
-    this.eventListeners = new Map();
+  constructor(options?: SdkOptions) {
     this.dialogElement = null;
-    this._init(config);
-  }
-
-  /**
-   * Initialize the SDK with configuration
-   * @param {Object} config - Configuration object
-   * @returns {AtoaWebSdk} - The SDK instance for chaining
-   * @throws {Error} If configuration is invalid
-   */
-  _init(config?: {
-    environment: EnvironmentTypeEnum;
-    cancellationCallbackUrl?: string;
-    onError?: ErrorEventHandler;
-  }) {
-    if (config !== undefined) {
-      this.validateConfig(config);
-    }
-
-    this.providedEnvironment = config?.environment;
-    this.cancellationCallbackUrl = config?.cancellationCallbackUrl;
-
-    if (!this.eventListeners.has("error")) {
-      this.eventListeners.set("error", []);
-    }
-
-    if (config?.onError) {
-      this.eventListeners.get("error")?.push(config.onError);
-    }
-
+    this.validateSdkOptions(options);
+    this.providedSdkOptions = options;
     return this;
   }
 
   /**
    * Validates the SDK configuration
-   * @param {Object} config - Configuration object to validate
-   * @throws {Error} If configuration is invalid
+   * @param {SdkOptions} options - Object to validate
+   * @throws {AtoaPayWebSDKError} If configuration is invalid
    */
-  validateConfig(config: { environment?: any } | null) {
-    if (typeof config !== "object" || config === null) {
-      throw new Error("[Atoa Web SDK] Configuration must be an object");
+  validateSdkOptions(options?: SdkOptions) {
+    if (options === undefined || options === null) {
+      throw new AtoaPayWebSDKError("[Atoa Web SDK] SDK options required");
+    }
+
+    if (typeof options !== "object") {
+      throw new AtoaPayWebSDKError("[Atoa Web SDK] Options must be an object");
     }
 
     const allowedEnvironments = Object.values(EnvironmentTypeEnum);
 
     if (
-      config.environment &&
-      !allowedEnvironments.includes(config.environment)
+      options.environment &&
+      !allowedEnvironments.includes(options.environment)
     ) {
-      throw new Error(
+      throw new AtoaPayWebSDKError(
         `[Atoa Web SDK] Invalid environment. Must be one of: ${allowedEnvironments.join(
           ", "
         )}`
       );
     }
-  }
 
-  validateDialogOptions(options: DialogOptions): boolean {
-    console.log(JSON.stringify(options));
     if (
       options.paymentRequestId === undefined ||
       options.paymentRequestId === ""
     ) {
-      this._emit("error", {
-        message: "[Atoa Web SDK] Payment Request Id is required",
-      });
-
-      return false;
+      // throw new AtoaPayWebSDKError(
+      //   "[Atoa Web SDK] Payment Request Id is required"
+      // );
     }
-    if (options.paymentUrl === undefined || options.paymentUrl === "") {
-      this._emit("error", {
-        message: "[Atoa Web SDK] Payment URL is required",
-      });
-
-      return false;
-    }
-
-    return true;
   }
 
   /**
-   * Shows a dialog with the specified options
-   * @param {Object} options - Dialog options
-   * @returns {Promise} Resolves with true if confirmed, false if cancelled
+   * Shows the payment dialog with provided @param {SdkOptions}
    */
-  showDialog(options: DialogOptions) {
-    const validationResult = this.validateDialogOptions(options);
+  showPaymentDialog() {
+    try {
+      this.dialogElement = document.createElement("atoa-pay-sdk-dialog");
 
-    if (validationResult === false) return;
+      Object.assign(this.dialogElement, {
+        paymentRequestId: this.providedSdkOptions?.paymentRequestId,
+        environment: this.providedSdkOptions?.environment,
+        onError: this.providedSdkOptions?.onError,
+        onPaymentStatusChange: this.providedSdkOptions?.onPaymentStatusChange,
+        onUserCancel: this._onCancel.bind(this),
+        onClose: this._onClose.bind(this),
+      });
 
-    return new Promise((resolve) => {
-      try {
-        this.dialogElement = document.createElement("atoa-pay-sdk-dialog");
+      document.body.appendChild(this.dialogElement);
+    } catch (error) {
+      throw new AtoaPayWebSDKError(
+        `[Atoa Web SDK] Error displaying payment dialog`,
+        {
+          originalError:
+            error instanceof Error
+              ? {
+                  name: error.name,
+                  message: error.message,
+                }
+              : String(error),
+        }
+      );
+    }
+  }
 
-        Object.assign(this.dialogElement, {
-          paymentRequestId: options.paymentRequestId,
-          environment: this.providedEnvironment,
-          paymentUrl: options.paymentUrl,
-        });
+  _onCancel(paymentRequestId: string) {
+    this.removeDialog();
+    if (this.providedSdkOptions?.onUserCancel) {
+      this.providedSdkOptions?.onUserCancel(paymentRequestId);
+    }
+  }
 
-        this.dialogElement.addEventListener("error", (event: Event) => {
-          const customEvent = event as CustomEvent;
-          this._emit("error", customEvent.detail);
-        });
-
-        this.dialogElement.addEventListener("success", (event: Event) => {
-          const customEvent = event as CustomEvent;
-          this.removeDialog();
-          resolve({
-            data: customEvent.detail,
-          });
-        });
-
-        this.dialogElement.addEventListener("close", (event: Event) => {
-          const customEvent = event as CustomEvent;
-
-          const callbackUrl = this.cancellationCallbackUrl;
-
-          if (callbackUrl) {
-            axios
-              .get(callbackUrl, {
-                params: {
-                  status: "cancelled",
-                  paymentRequestId: options.paymentRequestId,
-                },
-              })
-              .catch((error: AxiosError) => {
-                this._emit("error", {
-                  message: "[Atoa Web SDK] Failed to notify cancellation",
-                  details: error,
-                });
-              });
-          }
-
-          this.removeDialog();
-          resolve({
-            status: "cancelled",
-            data: customEvent.detail,
-          });
-        });
-
-        document.body.appendChild(this.dialogElement);
-      } catch (error) {
-        this._emit("error", {
-          message:
-            error instanceof Error ? error.message : "Error showing dialog",
-          details: error,
-        });
-        resolve({ status: "error", error });
-      }
-    });
+  _onClose(data: { paymentIdempotencyId: string; status: string }) {
+    this.removeDialog();
+    if (this.providedSdkOptions?.onClose) {
+      this.providedSdkOptions.onClose(data);
+    }
   }
 
   removeDialog() {
@@ -186,31 +109,13 @@ export class AtoaWebSdk {
     }
   }
 
-  _emit(event: string, data: any) {
-    const listeners = this.eventListeners.get(event);
-
-    if (listeners) {
-      listeners.forEach((callback) => {
-        try {
-          callback(data);
-        } catch (error) {
-          console.error(
-            `[Atoa Web SDK] Error in "${event}" event listener:`,
-            error
-          );
-        }
-      });
-    }
-  }
-
   /**
    * Cleans up resources used by the SDK
    * Removes dialog element, clears event listeners, and resets instance properties
    */
   dispose() {
     this.removeDialog();
-    this.eventListeners.clear();
-    this.providedEnvironment = undefined;
     this.dialogElement = null;
+    this.providedSdkOptions = null;
   }
 }

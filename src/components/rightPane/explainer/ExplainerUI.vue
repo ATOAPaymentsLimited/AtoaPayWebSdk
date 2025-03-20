@@ -37,7 +37,6 @@ import { getBankLogo } from '@/core/types/BankData';
 import type BankData from '@/core/types/BankData';
 
 const emit = defineEmits<{
-  (e: 'close'): void
   (e: 'continue'): void
 }>()
 

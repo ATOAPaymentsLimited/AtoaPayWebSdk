@@ -128,7 +128,8 @@ const emit = defineEmits<{
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentRequestDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
-const paymentUrl = inject<string>('paymentUrl');
+// TODO: Add this back with logic
+const paymentUrl = '';
 const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
