@@ -49,9 +49,9 @@ export class AtoaWebSdk {
       options.paymentRequestId === undefined ||
       options.paymentRequestId === ""
     ) {
-      // throw new AtoaPayWebSDKError(
-      //   "[Atoa Web SDK] Payment Request Id is required"
-      // );
+      throw new AtoaPayWebSDKError(
+        "[Atoa Web SDK] Payment Request Id is required"
+      );
     }
   }
 

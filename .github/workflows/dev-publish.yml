@@ -21,3 +21,4 @@ jobs:
         env:
           VITE_BASE_URL: ${{ secrets.DEV_API_BASE_URL }}
           VITE_ENV: "dev"
+          VITE_SDK_VERSION: 0.0.1

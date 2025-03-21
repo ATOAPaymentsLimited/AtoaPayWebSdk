@@ -68,6 +68,8 @@ const pollPaymentStatus = async () => {
     if (previousStatus !== requestStatusDetails.value?.status && paymentStatusChangeHandler) {
       paymentStatusChangeHandler({
         status: requestStatusDetails.value?.status,
+        paymentIdempotencyId: requestStatusDetails.value?.transactionDetails?.[0]?.paymentIdempotencyId,
+        paymentRequestId: paymentRequestId ?? '',
       });
       previousStatus = requestStatusDetails.value?.status;
     }

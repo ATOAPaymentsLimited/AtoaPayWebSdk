@@ -5,7 +5,8 @@ export type ErrorEventHandler = (error: AtoaPayWebSDKError) => void;
 
 export type PaymentStatusEventHandler = (data: {
   status: string;
-  statusDetails?: any;
+  paymentRequestId: string;
+  paymentIdempotencyId?: string;
 }) => void;
 
 export type UserCancelPaymentEventHandler = (paymentRequestId: string) => void;
@@ -20,6 +21,6 @@ export interface SdkOptions {
   paymentRequestId: string;
   onError?: ErrorEventHandler;
   onPaymentStatusChange?: PaymentStatusEventHandler;
-  onUserCancel: UserCancelPaymentEventHandler;
-  onClose: DialogCloseEventHandler;
+  onUserCancel?: UserCancelPaymentEventHandler;
+  onClose?: DialogCloseEventHandler;
 }

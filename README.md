@@ -25,26 +25,25 @@ import { AtoaWebSdk } from "@atoapayments/atoa-web-client-sdk";
 // Initialize the SDK with environment
 const sdk = new AtoaWebSdk({
   environment: "PRODUCTION", // 'SANDBOX' for testing
-  cancellationCallbackUrl: "https://your-api.example.com/payment/cancelled", // Optional
+  paymentRequestId: "your-payment-request-id",
   onError: (error) => {
     // Optional
     console.error("Atoa SDK Error:", error.message);
   },
+  onPaymentStatusChange: (data) => {
+    // Optional
+    console.log("Payment status changed:", data.status);
+  },
+  onClose: (data) => {
+    console.log("Payment closed with status:", data.status);
+  },
+  onUserCancel: (paymentRequestId) => {
+    console.log("Payment was cancelled for:", paymentRequestId);
+  },
 });
 
 // Show payment dialog
-sdk
-  .showDialog({
-    paymentRequestId: "your-payment-request-id",
-    paymentUrl: "your-payment-url",
-  })
-  .then((result) => {
-    if (result.status === "cancelled") {
-      console.log("Payment was cancelled");
-    } else {
-      console.log("Payment result:", result.data);
-    }
-  });
+sdk.showPaymentDialog();
 ```
 
 ### HTML Script Tag
@@ -55,18 +54,14 @@ sdk
 
   const sdk = new AtoaWebSdk({
     environment: "PRODUCTION",
-    cancellationCallbackUrl: "https://your-api.example.com/payment/cancelled",
+    paymentRequestId: "your-payment-request-id",
+    onClose: (data) => console.log("Payment completed:", data),
+    onUserCancel: (paymentRequestId) =>
+      console.log("Payment cancelled:", paymentRequestId),
   });
 
   document.getElementById("payment-button").addEventListener("click", () => {
-    sdk
-      .showDialog({
-        paymentRequestId: "your-payment-request-id",
-        paymentUrl: "your-payment-url",
-      })
-      .then((result) => {
-        console.log("Payment completed:", result);
-      });
+    sdk.showPaymentDialog();
   });
 </script>
 ```
@@ -81,43 +76,27 @@ new AtoaWebSdk(config);
 
 #### Parameters
 
-- `config` (optional): Configuration object
+- `options`: Configuration object (required)
   - `environment`: The Atoa environment to use (enum: 'SANDBOX', 'PRODUCTION')
-  - `cancellationCallbackUrl`: URL to notify when payment is cancelled (optional)
-  - `onError`: Error callback function (optional) - alternative to using the onError method
+  - `paymentRequestId`: The payment request ID (required)
+  - `onError`: Error callback function (optional)
+  - `onPaymentStatusChange`: Callback for payment status updates (optional)
+  - `onClose`: Callback when payment dialog is closed (optional)
+  - `onUserCancel`: Callback when payment is cancelled by user (optional)
 
 ### Methods
 
-#### showDialog(options)
+#### showPaymentDialog()
 
-Shows the payment dialog with the specified options.
+Shows the payment dialog with the configured options.
 
 ```javascript
-sdk.showDialog({
-  paymentRequestId: "your-payment-request-id",
-  paymentUrl: "your-payment-url",
-});
+sdk.showPaymentDialog();
 ```
-
-**Parameters:**
-
-- `options`: Dialog options object
-  - `paymentRequestId`: The payment request ID
-  - `paymentUrl`: The payment URL
 
 **Returns:**
 
-- `Promise<Object>`: Resolves with payment result:
-  - On success: `{ data: {...paymentData} }`
-  - On cancellation: `{ status: 'cancelled', data: {...} }`
-  - On error: `{ status: 'error', error: {...} }`
-
-**Parameters:**
-
-- `callback`: Function to call when an error occurs
-  - Receives an error object with:
-    - `message`: Error message
-    - `details`: (optional) Additional error details
+- `void`
 
 #### dispose()
 
@@ -126,6 +105,53 @@ Cleans up resources used by the SDK.
 ```javascript
 sdk.dispose();
 ```
+
+This method:
+
+- Removes the dialog element from the DOM
+- Clears event listeners
+- Resets instance properties
+
+### Event Callbacks
+
+#### onError(error)
+
+Called when an error occurs during the payment process.
+
+**Parameters:**
+
+- `error`: Error object with:
+  - `message`: Error message
+  - `details`: (optional) Additional error details
+
+#### onPaymentStatusChange(data)
+
+Called when the payment status changes.
+
+**Parameters:**
+
+- `data`: Status data object with:
+  - `status`: Current payment status
+  - `paymentRequestId`: The payment request ID
+  - `paymentIdempotencyId`: (optional) Payment idempotency ID
+
+#### onClose(data)
+
+Called when the payment dialog is closed.
+
+**Parameters:**
+
+- `data`: Close data object with:
+  - `paymentIdempotencyId`: Payment idempotency ID
+  - `status`: Final payment status
+
+#### onUserCancel(paymentRequestId)
+
+Called when the user cancels the payment.
+
+**Parameters:**
+
+- `paymentRequestId`: The payment request ID
 
 ## Development
 
@@ -148,6 +174,9 @@ npm run build:prod  # Production
 
 # Run the example
 npm run serve-example
+
+# Run tests
+npm run test
 ```
 
 ## License

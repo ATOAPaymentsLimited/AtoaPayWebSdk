@@ -21,3 +21,4 @@ jobs:
         env:
           VITE_BASE_URL: ${{ secrets.UAT_API_BASE_URL }}
           VITE_ENV: "uat"
+          VITE_SDK_VERSION: 0.0.1
