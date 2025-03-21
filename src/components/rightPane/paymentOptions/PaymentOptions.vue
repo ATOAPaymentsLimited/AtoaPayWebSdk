@@ -92,7 +92,7 @@
           <span>Or</span>
         </div>
 
-        <a :href="bankWebsiteUrl" target="_blank" class="bank-website-link">
+        <a :href="isLoading ? undefined : bankWebsiteUrl" target="_blank" class="bank-website-link">
           Go to your bank website
         </a>
       </div>
@@ -102,7 +102,7 @@
 
 <script setup lang="ts">
 import storeImagePlaceholder from "@/assets/images/store_image_placeholder.svg";
-import { ref, onMounted, inject, type Ref, type ComputedRef, onBeforeUnmount } from 'vue';
+import { ref, onMounted, inject, type Ref, type ComputedRef, onBeforeUnmount, computed } from 'vue';
 import type BankData from '@/core/types/BankData';
 import type PaymentDetails from '@/core/types/PaymentDetails';
 import { PaymentsService } from '@/core/services/PaymentsService';
@@ -117,19 +117,21 @@ const props = defineProps<{
   paymentDetails: PaymentDetails,
 }>();
 
-const bankWebsiteUrl = ref('');
-const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
-
 const emit = defineEmits<{
   (e: 'bankChange'): void;
   (e: 'statusChange', requestStatusDetails: PaymentRequestStatusDetails): void;
 }>();
 
+
+const bankWebsiteUrl = ref('');
+const isMobileWidth = inject<ComputedRef<boolean>>('isMobileWidth');
 const paymentRequestId = inject<string>('paymentRequestId');
 const paymentRequestDetails = inject<Ref<PaymentDetails>>('paymentRequestDetails');
 const environment = inject<EnvironmentTypeEnum>('environment');
-// TODO: Add this back with logic
-const paymentUrl = '';
+const apiBaseUrl = import.meta.env.VITE_QR_BASE_URL;
+const paymentUrl = computed(() => {
+  return `${apiBaseUrl}?${paymentAuthResponse.value?.paymentIdempotencyId}?env=${environment}`;
+});
 const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
@@ -176,7 +178,6 @@ const fetchAuthorisationData = async () => {
 
 const checkPaymentStatus = async () => {
   try {
-    // TODO: Confirm this logic
     const requestStatusData = await paymentsService.getPaymentStatusByID(
       paymentRequestId || "",
       { env: environment || EnvironmentTypeEnum.PRODUCTION }

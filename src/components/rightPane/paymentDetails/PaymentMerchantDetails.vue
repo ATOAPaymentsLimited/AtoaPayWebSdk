@@ -7,14 +7,13 @@
       <span class="merchant-business-name-prefix">To </span>
       <span class="merchant-business-name-value">{{ merchantBusinessName }}</span>
     </div>
+    <div class="store-location-name" v-if="storeLocationName">
+      <span class="store-location-name-value">{{ storeLocationName }}</span>
+    </div>
     <div class="payment-amount">
       <span class="payment-amount-bold">£{{ splitAmount[0] }}.</span>
       <span class="payment-amount-normal">{{ splitAmount[1].toString().padStart(2, '0') }}</span>
     </div>
-    <!-- TODO: Confirm with designer -->
-    <!-- <div class="store-location-name" v-if="storeLocationName">
-      <span class="store-location-name-value">{{ storeLocationName }}</span>
-    </div> -->
   </div>
 </template>
 
@@ -93,10 +92,9 @@ const splitAmount = computed(() => {
   font-weight: 700;
 }
 
-/* TODO: Confirm with designer */
-/* .store-location-name {
+.store-location-name {
   margin-top: 4px;
   color: var(--grey-500);
   font-size: 12px;
-} */
+}
 </style>
