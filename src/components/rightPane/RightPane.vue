@@ -214,7 +214,6 @@ const confirmClose = () => {
   }
 };
 
-// TODO: Update this value
 const timestamp = ref(new Date());
 
 const formattedTimestamp = computed(() => {

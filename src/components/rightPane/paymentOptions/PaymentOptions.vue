@@ -68,26 +68,29 @@
         </div>
       </div>
       <div v-else class="desktop-footer-section">
-        <div class="qr-section">
+        <div key="qr-section" class="qr-section">
           <p class="qr-instructions-bold">Scan with your phone camera</p>
           <p class="qr-instructions">to confirm in your bank app.</p>
           <div class="qr-container">
-            <div v-if="isLoading" class="qr-code-placeholder">
-              <div class="loading-spinner"></div>
-            </div>
-            <div v-else-if="qrLoadError" class="qr-error">
-              QR code failed to load. Please try refreshing the page.
-            </div>
-            <div v-else class="qrcode">
-              <vue-qrcode :value="paymentUrl" tag="svg" :options="{
-                errorCorrectionLevel: 'Q',
-                width: 250,
-              }"></vue-qrcode>
-              <img class="qrcode-mask-image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
-            </div>
+            <transition name="fade" mode="out-in">
+              <div v-if="showInstructionGif" key="gif" class="instruction-gif-container">
+                <img src="https://atoa-gifs.s3.eu-west-2.amazonaws.com/scan_qr_mobile.gif"
+                  alt="Scan QR code instructions" class="instruction-gif" />
+              </div>
+              <div v-else-if="isLoading" class="qr-code-placeholder">
+                <div class="loading-spinner"></div>
+              </div>
+              <div v-else class="qrcode">
+                <vue-qrcode :value="paymentUrl" tag="svg" :options="{
+                  errorCorrectionLevel: 'Q',
+                  width: 250,
+                  margin: 0,
+                }"></vue-qrcode>
+                <img class="qrcode-mask-image" src="@/assets/images/atoa_logo_primary.svg" alt="Atoa Logo" />
+              </div>
+            </transition>
           </div>
         </div>
-
         <div class="divider">
           <span>Or</span>
         </div>
@@ -132,12 +135,12 @@ const apiBaseUrl = import.meta.env.VITE_QR_BASE_URL;
 const paymentUrl = computed(() => {
   return `${apiBaseUrl}?${paymentAuthResponse.value?.paymentIdempotencyId}?env=${environment}`;
 });
-const qrLoadError = ref(false);
 const paymentAuthResponse = ref<PaymentAuthResponse | null>(null);
 const isLoading = ref(true);
 const pollInterval = ref<number | null>(null);
 const fetchAuthorisationError = ref<string | null>(null);
 const paymentsService = new PaymentsService();
+const showInstructionGif = ref(true);
 
 const getBankLogo = (bank: BankData | undefined) => {
   if (!bank) return '';
@@ -194,6 +197,9 @@ const checkPaymentStatus = async () => {
 onMounted(() => {
   fetchAuthorisationData();
   pollInterval.value = setInterval(checkPaymentStatus, 1000);
+  setTimeout(() => {
+    showInstructionGif.value = false;
+  }, 3000);
 });
 
 onBeforeUnmount(() => {
@@ -326,7 +332,7 @@ onBeforeUnmount(() => {
   background: var(--base-white);
   margin: 24px 0;
   border-radius: 12.8px;
-  border: 0.8px solid var(--Neutral-Grey-200, #EAEEF0);
+  border: 1px solid var(--Neutral-Grey-200, #EAEEF0);
   background: var(--Neutral-Grey-50, #F6F8F9);
 }
 
@@ -583,5 +589,30 @@ onBeforeUnmount(() => {
 
 .error-overlay-btn:hover {
   background-color: var(--grey-100);
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+
+.instruction-gif-container {
+  width: 100%;
+  height: 250px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.instruction-gif {
+  max-height: 250px;
+  max-width: 100%;
+  object-fit: contain;
 }
 </style>

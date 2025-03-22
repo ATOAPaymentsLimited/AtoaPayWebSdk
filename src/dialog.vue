@@ -9,6 +9,8 @@
     fetchpriority="high" type="image/gif">
   <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/payment_success.gif"
     fetchpriority="high" type="image/gif">
+  <link rel="preload" as="image" href="https://atoa-gifs.s3.eu-west-2.amazonaws.com/scan_qr_mobile.gif"
+    fetchpriority="high" type="image/gif">
 
   <div class="sdk-dialog-container" ref="dialogContainer">
     <div class="sdk-dialog" role="dialog" aria-modal="true">
